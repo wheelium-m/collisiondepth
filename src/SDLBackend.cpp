@@ -4,11 +4,14 @@
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
 
+/* Cleanup SDL. */
 SDLBackend::~SDLBackend() {
   printf("SDL shutdown\n");
   SDL_Quit();
 }
 
+/* Open a window, initialize a framerate manager, and clear the back
+ * buffer. */
 bool SDLBackend::init(int width, int height) {
   if(SDL_Init(SDL_INIT_EVERYTHING) < 0) return false;
   SDL_WM_SetCaption("Collision Depth", "Collision");
@@ -20,6 +23,8 @@ bool SDLBackend::init(int width, int height) {
   return true;
 }
 
+/* Render the model (currently hard coded here) in the given camera's
+ * coordinate frame. */
 void SDLBackend::render(btTransform &camera) {
   // Suppose we just have a point
   btVector3 pt(8,0,0);
@@ -30,6 +35,8 @@ void SDLBackend::render(btTransform &camera) {
   SDL_Flip(m_display);
 }
 
+/* Check UI events, render the current frame, and return true if we
+ * should continue looping and false if the user asked to quit. */
 bool SDLBackend::loop(btTransform &camera) {
   SDL_Event ev;
   SDL_PollEvent(&ev);
@@ -38,4 +45,3 @@ bool SDLBackend::loop(btTransform &camera) {
   SDL_framerateDelay(m_fps);
   return true;
 }
-
