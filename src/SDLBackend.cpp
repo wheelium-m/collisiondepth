@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "SDLBackend.h"
 #include <SDL_gfxPrimitives.h>
+#include "Model.h"
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
 
@@ -26,13 +27,15 @@ bool SDLBackend::init(int width, int height) {
 /* Render the model (currently hard coded here) in the given camera's
  * coordinate frame. */
 void SDLBackend::render(btTransform &camera) {
-  // Suppose we just have a point
-  btVector3 pt(8,0,0);
-  pt = camera(pt); // Transform the point
-  Sint16 cx = (Sint16)(pt.x() * 10) + 320;
-  Sint16 cy = (Sint16)(pt.y() * 10) + 240;
-  filledCircleRGBA(m_display, cx, cy, 5, 255, 0, 0, 255);
-  SDL_Flip(m_display);
+  Model m = model();
+  for(int i = 0; i < m.size(); i++) {
+    btVector3 pt = m[i];
+    pt = camera(pt); // Transform the point
+    Sint16 cx = (Sint16)(pt.x() * 10) + 320;
+    Sint16 cy = (Sint16)(pt.y() * 10) + 240;
+    filledCircleRGBA(m_display, cx, cy, 5, 255, 0, 0, 255);
+    SDL_Flip(m_display);
+  }
 }
 
 /* Check UI events, render the current frame, and return true if we

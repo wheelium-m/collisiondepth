@@ -3,7 +3,7 @@ CFLAGS += -Iinclude $(shell pkg-config --cflags bullet) $(shell pkg-config --cfl
  $(shell pkg-config --cflags SDL_gfx)
 LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
  $(shell pkg-config --libs SDL_gfx)
-OBJS = SDLBackend.o
+OBJS = SDLBackend.o Model.o
 
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT
