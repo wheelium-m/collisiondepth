@@ -1,0 +1,4 @@
+* Dependencies
+- bullet 3d
+- SDL
+- SDL_gfx
