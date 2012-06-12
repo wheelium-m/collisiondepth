@@ -1,4 +1,5 @@
-CC=clang++
+#CC=clang++
+CC=g++
 CFLAGS += -Iinclude $(shell pkg-config --cflags bullet) $(shell pkg-config --cflags sdl)\
  $(shell pkg-config --cflags SDL_gfx)
 LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\

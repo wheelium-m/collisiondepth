@@ -2,3 +2,6 @@
 - bullet 3d
 - SDL
 - SDL_gfx
+
+* Compatibility notes
+** SDL_gfx framerate manager doesn't work under VirtualBox
