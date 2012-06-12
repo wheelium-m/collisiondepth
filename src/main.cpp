@@ -13,10 +13,10 @@ void go(Renderer& renderer) {
     return;
   }
 
-  // The camera is initially an identity transform
-  btTransform cam(btQuaternion::getIdentity());
+  // The camera is initially just a translation along Z.
+  btTransform cam(btQuaternion::getIdentity(), btVector3(0,0,1));
 
-  // Rotate the camera about the z-axis by 2 degrees-per-frame
+  // Rotate the camera about the Z-axis by 2 degrees-per-frame
   while(renderer.loop(cam)) {
     cam *= btTransform(btQuaternion(btVector3(0,0,1), btScalar(DEG2RAD(2))));
   }

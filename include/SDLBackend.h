@@ -13,9 +13,11 @@ public:
   virtual bool init(int width, int height);
   virtual bool loop(btTransform &camera);
 private:
+  btVector3 cameraToScreenTranslation;
   SDL_Surface* m_display;
   FPSmanager* m_fps;
   void render(btTransform &camera);
+  btVector3 cameraToScreen(btVector3 pt);
 };
 
 #endif
