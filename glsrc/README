@@ -1,0 +1,5 @@
+This is a triangle that represents a simple robot arm that is rotating counterclockwise about the z-axis.
+
+Although it isn't rendered, there is a 1x1 box that is located at z = -.5. Whenever the triangle intersects the box, the pixels that go beyond the box are marked as red.
+
+makeFloats.cpp makes the depth texture that is used. Oddly enough, if OpenGL is given a depth texture that has negative floating point values in it, it will change all negative values to be positive.
