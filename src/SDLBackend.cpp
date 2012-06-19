@@ -47,7 +47,7 @@ void SDLBackend::render(btTransform &camera) {
   for(int i = 0; i < m.size(); i++) {
     btVector3 pt = m[i];
     pt = cameraToScreen(project(camera(pt))); // Transform the point
-    filledCircleRGBA(m_display, (Sint16)pt.x(), (Sint16)pt.y(), 5, \
+    filledCircleRGBA(m_display, (Sint16)pt.x(), (Sint16)pt.y(), 100, \
                      255, 0, 0, 255);
   }
   SDL_Flip(m_display);

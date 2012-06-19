@@ -6,7 +6,7 @@ LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
 OBJS = SDLBackend.o Model.o
 
 all:	src/main.cpp ${OBJS}
-	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT
+	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL
 
 $(OBJS):	%.o: src/%.cpp
 	${CC} ${CFLAGS} -c $< -o $@
