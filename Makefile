@@ -8,6 +8,9 @@ OBJS = SDLBackend.o Model.o
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL
 
+mac:	src/main.cpp ${OBJS}
+	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT
+
 $(OBJS):	%.o: src/%.cpp
 	${CC} ${CFLAGS} -c $< -o $@
 
