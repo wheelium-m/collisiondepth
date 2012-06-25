@@ -11,6 +11,7 @@ SDLBackend::~SDLBackend() {
   SDL_Quit();
 }
 
+// Camera coordinate system to screen space
 inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
   // The scaling factor just zooms things in a bit. It is arbitrary.
   static const btVector3 scale = btVector3(10.0,10.0,1);
@@ -18,9 +19,46 @@ inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
   return v;
 }
 
+// Perspective projection
 inline btVector3 project(btVector3 v) {
   if(v.z() != 0) return v * (1.0 / v.z());
   else return v;
+}
+
+/* Draw a sphere with shading indicating depth. */
+void SDLBackend::drawSphere(btTransform &camera, btVector3 loc, float r) {
+  btVector3 camSpace = camera(loc);
+  btVector3 pt = cameraToScreen(project(camSpace));
+
+  // FIXME: the screen coordinate system scaling factor hack (10x)
+  // appears both here and in cameraToScreen.
+  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * 10.0f) : (int)r;
+  int bpp = m_display->format->BytesPerPixel;
+  uint8_t *p;
+  int colorScale = 128 / bound;
+  int bsq = bound * bound; // radius squared
+
+  // Pixel ordering is ARGB.
+  // const uint32_t pixel = 255 | 255 << 16; // little-endian opaque green pixel
+
+  uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
+                         m_display->pitch * m_display->h;
+  for(int y = -bound; y < bound; y++) {
+    const int rowBound = (int)sqrt(bsq - y*y);
+    const int ysq = y * y;
+    p = (uint8_t*)m_display->pixels + \
+        ((int)(pt.y() - bound) + y) * m_display->pitch + \
+        (int)(pt.x() - rowBound)*bpp;
+    if(p < m_display->pixels) continue;
+    if(p > endOfBuffer) break;
+    for(int x = -rowBound; x < rowBound; x++, p += 4) {
+      //*(uint32_t*)p = pixel;
+      int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
+      p[1] = 0;
+      p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
+      p[3] = 0;
+    }
+  }
 }
 
 /* Open a window, initialize a framerate manager, and clear the back
@@ -50,6 +88,7 @@ void SDLBackend::render(btTransform &camera) {
     filledCircleRGBA(m_display, (Sint16)pt.x(), (Sint16)pt.y(), 100, \
                      255, 0, 0, 255);
   }
+  drawSphere(camera, btVector3(12,12,0), 4);
   SDL_Flip(m_display);
 }
 

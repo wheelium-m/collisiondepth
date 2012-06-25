@@ -17,6 +17,7 @@ private:
   SDL_Surface* m_display;
   FPSmanager* m_fps;
   void render(btTransform &camera);
+  void drawSphere(btTransform &camera, btVector3 loc, float r);
   btVector3 cameraToScreen(btVector3 pt);
 };
 
