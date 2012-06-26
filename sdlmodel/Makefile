@@ -2,3 +2,5 @@ CC = -Iinclude -I/usr/local/include/bullet   -D_GNU_SOURCE=1 -D_REENTRANT -I/usr
 
 all:
 	g++ -o spin spin.cpp $(CC)
+clean:
+	rm -rf ./spin
