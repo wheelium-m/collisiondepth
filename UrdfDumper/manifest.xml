@@ -1,0 +1,17 @@
+<package>
+  <description brief="UrdfDumper">
+
+     Dump robot structure from a URDF file into something a bit
+     simpler.
+
+  </description>
+  <author>Anthony Cowley</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/UrdfDumper</url>
+  <depend package="roscpp"/>
+  <depend package="urdf"/>
+
+</package>
+
+

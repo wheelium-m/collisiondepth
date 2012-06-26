@@ -1,0 +1,24 @@
+A standalone program that extracts robot geometry from a URDF file.
+
+This program depends on ROS and its standard library's URDF parsing
+functionality.
+
+The output format is an ordered list of "links" (i.e. body segments of
+the robot) followed by a list of parent-child relationships.
+
+Syntax:
+NumLinks
+LinkName: (tx, ty, tz) (roll, pitch, yaw) (axis_x, axis_y, axis_z)
+ParentIndex -> ChildIndex
+
+Example:
+2
+base_link: (0,0,0) (0,0,0) (0,0,0)
+right_leg: (0.22, 0, 0.25) (0,0,0) (1,0,0)
+0 -> 1
+
+Notes: The first line, "2," is the number of links in the model. The
+next two lines define two named links, each with a translational and
+rotational offset from its parent. The last line encodes the tree
+structure of the robot by indicating that link 0 is the parent of link
+1, where 0 refers to "base_link" and 1 refers to "right_leg".
