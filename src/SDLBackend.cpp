@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include "SDLBackend.h"
 #include <SDL_gfxPrimitives.h>
-#include "Model.h"
+#include <queue>
+
+using namespace std;
+
+#define ZOOM 40.0
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
 
@@ -14,7 +18,7 @@ SDLBackend::~SDLBackend() {
 // Camera coordinate system to screen space
 inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
   // The scaling factor just zooms things in a bit. It is arbitrary.
-  static const btVector3 scale = btVector3(10.0,10.0,1);
+  static const btVector3 scale = btVector3(ZOOM, ZOOM, 1);
   btVector3 v = pt * scale + cameraToScreenTranslation;
   return v;
 }
@@ -26,13 +30,17 @@ inline btVector3 project(btVector3 v) {
 }
 
 /* Draw a sphere with shading indicating depth. */
-void SDLBackend::drawSphere(btTransform &camera, btVector3 loc, float r) {
+void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   btVector3 camSpace = camera(loc);
   btVector3 pt = cameraToScreen(project(camSpace));
 
   // FIXME: the screen coordinate system scaling factor hack (10x)
   // appears both here and in cameraToScreen.
-  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * 10.0f) : (int)r;
+
+  // Perspective projection
+  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * ZOOM) : (int)r;
+
+  if(bound < 1) bound = 1;
   int bpp = m_display->format->BytesPerPixel;
   uint8_t *p;
   int colorScale = 128 / bound;
@@ -53,10 +61,12 @@ void SDLBackend::drawSphere(btTransform &camera, btVector3 loc, float r) {
     if(p > endOfBuffer) break;
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
       //*(uint32_t*)p = pixel;
+      //if(pt.x() + x < 0) continue;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
       p[1] = 0;
       p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
       p[3] = 0;
+      if(pt.x() + x >= m_display->w) break;
     }
   }
 }
@@ -79,7 +89,7 @@ bool SDLBackend::init(int width, int height) {
 
 /* Render the model (currently hard coded here) in the given camera's
  * coordinate frame. */
-void SDLBackend::render(btTransform &camera) {
+void SDLBackend::render(const btTransform &camera) {
   SDL_FillRect(m_display, NULL, 0);
   Model m = model();
   for(int i = 0; i < m.size(); i++) {
@@ -92,13 +102,34 @@ void SDLBackend::render(btTransform &camera) {
   SDL_Flip(m_display);
 }
 
+void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
+  SDL_FillRect(m_display, NULL, 0);
+  btVector3 origin(0,0,0);
+  drawSphere(camera, root.curr->trans(origin), root.curr->radius);
+  queue<pair<ModelTree*, btTransform> > q;
+  for(vector<ModelTree*>::const_iterator it = root.begin();
+      it != root.end();
+      it++) {
+    q.push(make_pair(*it, root.curr->trans));
+  }
+  while(!q.empty()) {
+    ModelTree* m = q.front().first;
+    btTransform t = m->curr->trans * q.front().second;
+    q.pop();
+    drawSphere(camera, t(origin), m->curr->radius);
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
+      q.push(make_pair(*it, t));
+  }
+  SDL_Flip(m_display);
+}
+
 /* Check UI events, render the current frame, and return true if we
  * should continue looping and false if the user asked to quit. */
 bool SDLBackend::loop(btTransform &camera) {
   SDL_Event ev;
   SDL_PollEvent(&ev);
   if(ev.type == SDL_KEYDOWN) return false;
-  render(camera);
+  renderModel(testTree(), camera);
   SDL_framerateDelay(m_fps);
   return true;
 }

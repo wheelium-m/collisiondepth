@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<robot name="test">
+  <link name="shoulder" />
+  <link name="elbow" />
+  <link name="hand" />
+  <joint name="upper_arm" type="fixed">
+    <origin rpy="0 0 0" xyz="0.4 0 0"/>
+    <child link="elbow"/>
+    <parent link="shoulder"/>
+  </joint>
+  <joint name="lower_arm" type="fixed">
+    <origin rpy="0 0 0" xyz="0.4 0 0"/>
+    <child link="hand"/>
+    <parent link="elbow"/>
+  </joint>
+</robot>
