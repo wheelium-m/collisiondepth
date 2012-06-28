@@ -71,7 +71,7 @@ int dumpModel(std::ostream& s, int parent, int index, MJoint joint, MLink link,
   for(size_t i = 0; i < link->child_links.size(); i++) {
     n += dumpModel(s, index, n, link->child_joints[i], link->child_links[i], arcs);
   }
-  return 1 + link->child_links.size();
+  return (n - index);
 }
 
 // A simple 3D vector structure to demonstrate dump file parsing
