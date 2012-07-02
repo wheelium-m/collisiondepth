@@ -34,6 +34,9 @@ inline btVector3 project(btVector3 v) {
 /* Draw a sphere with shading indicating depth. */
 void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   btVector3 camSpace = camera(loc);
+  /*This way, spheres behind the camera will not be drawn*/
+  if(camSpace.z()<0.0)
+    return;
   btVector3 pt = cameraToScreen(project(camSpace));
 
   // FIXME: the screen coordinate system scaling factor hack (10x)
@@ -131,31 +134,58 @@ void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
 bool SDLBackend::loop(btTransform &camera) {
   SDL_Event keyevent;    //The SDL event that we will poll to get events.
   static int moveFigure=0;
+  static int moveLeft = 0;
+  static int moveRight = 0;
+  static int moveIn = 0;
+  static int moveOut = 0;
   while (SDL_PollEvent(&keyevent))   //Poll our SDL key event for any keystrokes.
     {
       
       switch(keyevent.type){
+	
       case SDL_KEYDOWN:
 	switch(keyevent.key.keysym.sym){
         case SDLK_LEFT:
 	  //camera=camera*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), 1.0*PI/18.0)));
-          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	  
+          moveLeft=1;
           break;
         case SDLK_RIGHT:
           //camera=camera*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), -1.0*PI/18.0)));
-          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,0.0,-1.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+          moveRight=1;
 	  break;
         case SDLK_UP:
           //camera=camera*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), PI/18.0)));
-          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+          moveIn=1;
 	  break;
         case SDLK_DOWN:
           //camera=camera*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), -1.0*PI/18.0)));
-          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,-1.0,0.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+          moveOut=1;
 	  break;
 	default:
           break;
 	}
+	break;
+	
+      case SDL_KEYUP:
+	switch(keyevent.key.keysym.sym){
+        case SDLK_LEFT:
+	  
+          moveLeft = 0;
+          break;
+        case SDLK_RIGHT:
+          moveRight = 0;
+          break;
+        case SDLK_UP:
+          moveIn = 0;
+          break;
+        case SDLK_DOWN:
+          moveOut = 0;
+          break;
+        default:
+          break;
+	}
+	break;
       case SDL_MOUSEMOTION:
 	if(moveFigure==1){
 	  
@@ -183,6 +213,24 @@ bool SDLBackend::loop(btTransform &camera) {
   if(keyevent.key.keysym.sym==SDLK_ESCAPE){
     return false;
   }
+  
+  if(moveLeft==1){
+    
+    camera.setOrigin(camera.getOrigin()+btVector3(0.01,0.0,0.0));
+  }
+  
+  if(moveRight==1){
+    camera.setOrigin(camera.getOrigin()+btVector3(-0.01,0.0,0.0));
+  }
+  
+  if(moveIn==1){
+    camera.setOrigin(camera.getOrigin()+btVector3(0.0,0.0,-0.01));
+  }
+  
+  if(moveOut==1){
+    camera.setOrigin(camera.getOrigin()+btVector3(0.0,0.0,0.01));
+  }
+  
   renderModel(pr2(), camera);
   //SDL_framerateDelay(m_fps);
   return true;
