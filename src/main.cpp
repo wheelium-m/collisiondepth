@@ -20,7 +20,7 @@ void go(Renderer& renderer) {
 
   // Rotate the camera about the Z-axis by 2 degrees-per-frame
   while(renderer.loop(cam)) {
-    cam = btTransform(btQuaternion(spinAxis, btScalar(DEG2RAD(2)))) * cam;
+    //cam = btTransform(btQuaternion(spinAxis, btScalar(DEG2RAD(2)))) * cam;
   }
 }
 
