@@ -2,10 +2,12 @@
 #include "SDLBackend.h"
 #include <SDL_gfxPrimitives.h>
 #include <queue>
+#include <iostream>
 
 using namespace std;
 
 #define ZOOM 40.0
+#define PI 3.1415926535
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
 
@@ -62,6 +64,7 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
       //*(uint32_t*)p = pixel;
       //if(pt.x() + x < 0) continue;
+      if(p >= endOfBuffer) break;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
       p[1] = 0;
       p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
@@ -76,8 +79,8 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
 bool SDLBackend::init(int width, int height) {
   if(SDL_Init(SDL_INIT_EVERYTHING) < 0) return false;
   SDL_WM_SetCaption("Collision Depth", "Collision");
-  SDL_initFramerate(m_fps);
-  SDL_setFramerate(m_fps, 100);
+  //SDL_initFramerate(m_fps);
+  //SDL_setFramerate(m_fps, 100);
   cameraToScreenTranslation = btVector3((float)width / 2.0, \
                                         (float)height / 2.0, \
                                         0.0);
@@ -126,10 +129,61 @@ void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
 /* Check UI events, render the current frame, and return true if we
  * should continue looping and false if the user asked to quit. */
 bool SDLBackend::loop(btTransform &camera) {
-  SDL_Event ev;
-  SDL_PollEvent(&ev);
-  if(ev.type == SDL_KEYDOWN) return false;
-  renderModel(testTree(), camera);
-  SDL_framerateDelay(m_fps);
+  SDL_Event keyevent;    //The SDL event that we will poll to get events.
+  static int moveFigure=0;
+  while (SDL_PollEvent(&keyevent))   //Poll our SDL key event for any keystrokes.
+    {
+      
+      switch(keyevent.type){
+      case SDL_KEYDOWN:
+	switch(keyevent.key.keysym.sym){
+        case SDLK_LEFT:
+	  //camera=camera*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), 1.0*PI/18.0)));
+          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+          break;
+        case SDLK_RIGHT:
+          //camera=camera*(btTransform(btQuaternion(btVector3(0.0,0.0,1.0), -1.0*PI/18.0)));
+          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,0.0,-1.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	  break;
+        case SDLK_UP:
+          //camera=camera*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), PI/18.0)));
+          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	  break;
+        case SDLK_DOWN:
+          //camera=camera*(btTransform(btQuaternion(btVector3(0.0,1.0,0.0), -1.0*PI/18.0)));
+          camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(btTransform(btQuaternion(btVector3(0.0,-1.0,0.0), PI/18.0))*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	  break;
+	default:
+          break;
+	}
+      case SDL_MOUSEMOTION:
+	if(moveFigure==1){
+	  
+	  btVector3 motion(keyevent.motion.xrel, keyevent.motion.yrel,0.0);
+	  btTransform rot(btQuaternion(btVector3(0.0,0.0,1.0), -1.0*PI/2.0), btVector3(0.0,0.0,0.0));
+	  motion=rot(motion);
+	  rot.setRotation(btQuaternion(motion, motion.length()/50.0));
+	  camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(rot*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	}
+	//printf("The motions are: %d, %d\n",keyevent.motion.xrel, keyevent.motion.yrel);
+	//keyevent.motion.x, keyevent.motion.y
+	break;
+      case SDL_MOUSEBUTTONDOWN:
+	
+	moveFigure=1;
+	break;
+      case SDL_MOUSEBUTTONUP:
+	
+	moveFigure=0;
+	break;
+
+      }
+    }
+  
+  if(keyevent.key.keysym.sym==SDLK_ESCAPE){
+    return false;
+  }
+  renderModel(pr2(), camera);
+  //SDL_framerateDelay(m_fps);
   return true;
 }
