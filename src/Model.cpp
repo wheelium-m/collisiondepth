@@ -85,12 +85,25 @@ ModelTree* readDump(const char* fileName) {
   return root;
 }
 
+void makeSpheres(ModelTree *t){
+  double spacing = 0.1;
+  for(ModelTree::child_iterator it = t->begin(); it!=t->end(); it++){
+    btVector3 loc = (*it)->curr->trans(btVector3(0.0,0.0,0.0));
+    btVector3 step = (loc/loc.length())*spacing;
+    for(btVector3 sphere = *(new btVector3(0.0,0.0,0.0));sphere.length()<loc.length();sphere+=step){
+	t->curr->points.push_back(sphere);
+      }
+    makeSpheres((ModelTree *)(*it));
+  }
+}
+
 ModelTree* initPR2() {
   return readDump("UrdfDumper/etc/pr2.txt");
 }
 
 const ModelTree& pr2() {
   static ModelTree* t = initPR2();
+  makeSpheres(t);
   return *t;
 }
 

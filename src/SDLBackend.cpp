@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define ZOOM 40.0
+#define ZOOM 180.0
 #define PI 3.1415926535
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
@@ -120,9 +120,12 @@ void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
   }
   while(!q.empty()) {
     ModelTree* m = q.front().first;
-    btTransform t = m->curr->trans * q.front().second;
+    btTransform t = q.front().second*m->curr->trans; 
     q.pop();
     drawSphere(camera, t(origin), m->curr->radius);
+    for(int i = 0; i < m->curr->points.size();i++){
+      drawSphere(camera, t(m->curr->points[i]), m->curr->radius/3.0);
+    }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
   }
