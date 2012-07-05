@@ -31,8 +31,31 @@ inline btVector3 project(btVector3 v) {
   else return v;
 }
 
+/* Draw the axis relative to the camera perspective */
+void SDLBackend::drawAxis(const btTransform & camera){
+  btVector3 orig(0.0,0.0,0.0);
+  btVector3 x(1.0,0.0,0.0);
+  btVector3 y(0.0,1.0,0.0);
+  btVector3 z(0.0,0.0,1.0);
+  orig = cameraToScreen(project(camera(orig)));
+  x = cameraToScreen(project(camera(x)));
+  y = cameraToScreen(project(camera(y)));
+  z = cameraToScreen(project(camera(z)));
+  
+  lineRGBA(m_display, orig.x(), orig.y(), x.x(), x.y(), 255, 0, 0, 255);
+
+  lineRGBA(m_display, orig.x(), orig.y(), y.x(), y.y(), 0,255,0,255);
+
+  lineRGBA(m_display, orig.x(), orig.y(), z.x(), z.y(), 0,0,255,255);
+  //void Draw_Line(SDL_Surface *super,
+  //		 Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2,
+  //		 Uint32 color);
+  
+}
+
 /* Draw a sphere with shading indicating depth. */
 void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
+  drawAxis(camera);
   btVector3 camSpace = camera(loc);
   /*This way, spheres behind the camera will not be drawn*/
   if(camSpace.z()<0.0)
@@ -66,12 +89,21 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
     if(p > endOfBuffer) break;
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
       //*(uint32_t*)p = pixel;
-      //if(pt.x() + x < 0) continue;
+      if(pt.x() + x < 0) continue;
       if(p >= endOfBuffer) break;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
-      p[1] = 0;
-      p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
-      p[3] = 0;
+      float sphereDepth = (float)sqrt(bsq - x*x - ysq)+(float)camSpace.length();
+      //printf("Spheredepth: %f camSpace: <%f, %f, %f,> radius: %f\n",sphereDepth, camSpace[0],camSpace[1],camSpace[2], sqrt((float)(bsq - x*x - ysq)));
+      if(sphereDepth>5.0){
+	p[1] = 0;
+	p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
+	p[3] = 0;
+      }
+      else{
+	p[1] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
+	p[2] = 0;
+	p[3] = 0;
+      }
       if(pt.x() + x >= m_display->w) break;
     }
   }
@@ -108,9 +140,12 @@ void SDLBackend::render(const btTransform &camera) {
   SDL_Flip(m_display);
 }
 
+
+
 void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
   SDL_FillRect(m_display, NULL, 0);
   btVector3 origin(0,0,0);
+  
   drawSphere(camera, root.curr->trans(origin), root.curr->radius);
   queue<pair<ModelTree*, btTransform> > q;
   for(vector<ModelTree*>::const_iterator it = root.begin();

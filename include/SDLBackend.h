@@ -17,6 +17,7 @@ private:
   btVector3 cameraToScreenTranslation;
   SDL_Surface* m_display;
   FPSmanager* m_fps;
+  void drawAxis(const btTransform &camera);
   void render(const btTransform& camera);
   void renderModel(const ModelTree& m, const btTransform& camera);
   void drawSphere(const btTransform& camera, btVector3 loc, float r);
