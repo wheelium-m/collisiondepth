@@ -6,13 +6,13 @@ LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
 OBJS = SDLBackend.o Model.o
 
 all:	src/main.cpp ${OBJS}
-	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL
+	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL -g
 
 mac:	src/main.cpp ${OBJS}
-	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT
+	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT -g
 
 $(OBJS):	%.o: src/%.cpp
-	${CC} ${CFLAGS} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@ -g
 
 .PHONY:	clean
 

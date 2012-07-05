@@ -18,9 +18,10 @@ class DepthMap{
  DepthMap(const DepthMap &d):width(d.width), height(d.height), map(d.map), trans(d.trans){};
   
   bool collides(int x, int y, float sphereDepth){
-    if(*(map+(x*width)+height) >=sphereDepth)
-      return true;
-    else return false;
+    //cout<<"x y: "<<x<<" "<<y<<endl;
+    if(*(map+(y*width)+x) >sphereDepth)
+      return false;
+    else return true;
   };
   
   void makeSimpleMap(){
@@ -30,7 +31,7 @@ class DepthMap{
     
       map = (float *)malloc(640*480*sizeof(float));
       for(int i = 0; i < (640*480); i++){
-	*(map+i)=1.0;
+	*(map+i)=1.5;
 	//cout<<i<<endl;
 	//cout<<flush;
       }

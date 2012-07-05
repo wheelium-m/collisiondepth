@@ -3,6 +3,7 @@
 #include <SDL_gfxPrimitives.h>
 #include <queue>
 #include <iostream>
+#include "DepthMap.h"
 
 using namespace std;
 
@@ -56,12 +57,16 @@ void SDLBackend::drawAxis(const btTransform & camera){
 /* Draw a sphere with shading indicating depth. */
 void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   drawAxis(camera);
+  static DepthMap depth;
+  if(!depth.map)
+    depth.makeSimpleMap();
   btVector3 camSpace = camera(loc);
+  camSpace = (depth.trans.inverse())(camSpace);
   /*This way, spheres behind the camera will not be drawn*/
   if(camSpace.z()<0.0)
     return;
   btVector3 pt = cameraToScreen(project(camSpace));
-
+  //\cout<<"x y: "<<pt.x()<<" "<<pt.y()<<endl;
   // FIXME: the screen coordinate system scaling factor hack (10x)
   // appears both here and in cameraToScreen.
 
@@ -80,6 +85,8 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
                          m_display->pitch * m_display->h;
   for(int y = -bound; y < bound; y++) {
+    if(pt.y()+y>m_display->h||pt.y()+y<0)
+      break;
     const int rowBound = (int)sqrt(bsq - y*y);
     const int ysq = y * y;
     p = (uint8_t*)m_display->pixels + \
@@ -89,12 +96,14 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
     if(p > endOfBuffer) break;
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
       //*(uint32_t*)p = pixel;
+      if(p >= endOfBuffer||pt.x()>m_display->w) break;
       if(pt.x() + x < 0) continue;
-      if(p >= endOfBuffer) break;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
-      float sphereDepth = (float)sqrt(bsq - x*x - ysq)+(float)camSpace.length();
-      //printf("Spheredepth: %f camSpace: <%f, %f, %f,> radius: %f\n",sphereDepth, camSpace[0],camSpace[1],camSpace[2], sqrt((float)(bsq - x*x - ysq)));
-      if(sphereDepth>5.0){
+      
+      float sphereDepth =camSpace.length()+sqrt(r*r-((((double)r)/((double)bound))*x)*((((double)r)/((double)bound))*x)-((((double)r)/((double)bound))*y)*((((double)r)/((double)bound))*y)); 
+      
+      
+      if(depth.collides(pt.x(), pt.y(), sphereDepth)){
 	p[1] = 0;
 	p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
 	p[3] = 0;
