@@ -63,8 +63,7 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   btVector3 camSpace = camera(loc);
   camSpace = (depth.trans.inverse())(camSpace);
   /*This way, spheres behind the camera will not be drawn*/
-  if(camSpace.z()<0.0)
-    return;
+  if(camSpace.z()<0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
   //\cout<<"x y: "<<pt.x()<<" "<<pt.y()<<endl;
   // FIXME: the screen coordinate system scaling factor hack (10x)
@@ -85,25 +84,23 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
                          m_display->pitch * m_display->h;
   for(int y = -bound; y < bound; y++) {
-    if(pt.y()+y>m_display->h||pt.y()+y<0)
-      break;
+    if(pt.y() + y >= m_display->h || pt.y() + y < 0) break;
     const int rowBound = (int)sqrt(bsq - y*y);
     const int ysq = y * y;
     p = (uint8_t*)m_display->pixels + \
         ((int)(pt.y() - bound) + y) * m_display->pitch + \
         (int)(pt.x() - rowBound)*bpp;
     if(p < m_display->pixels) continue;
-    if(p > endOfBuffer) break;
+    if(p >= endOfBuffer) break;
+
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
-      //*(uint32_t*)p = pixel;
-      if(p >= endOfBuffer||pt.x()>m_display->w) break;
+      if(p >= endOfBuffer || pt.x() >= m_display->w) break;
       if(pt.x() + x < 0) continue;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
       
-      float sphereDepth =camSpace.length()+sqrt(r*r-((((double)r)/((double)bound))*x)*((((double)r)/((double)bound))*x)-((((double)r)/((double)bound))*y)*((((double)r)/((double)bound))*y)); 
+      float sphereDepth = camSpace.length()+sqrt(r*r-((((double)r)/((double)bound))*x)*((((double)r)/((double)bound))*x)-((((double)r)/((double)bound))*y)*((((double)r)/((double)bound))*y)); 
       
-      
-      if(depth.collides(pt.x(), pt.y(), sphereDepth)){
+      if(depth.collides(pt.x() + x, pt.y() + y, sphereDepth)){
 	p[1] = 0;
 	p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
 	p[3] = 0;
