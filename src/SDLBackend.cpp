@@ -94,7 +94,7 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
       // perspective projection.
 
       float ptDepth = camSpace.z() + sqrt(bsq - x*x - y*y) * unproject;
-      if(!depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
+      if(depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
         return false;
     }
   }
@@ -105,8 +105,10 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
 void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   drawAxis(camera);
   static DepthMap depth;
-  if(!depth.map)
-    depth.makeSimpleMap();
+  if(!depth.map){
+    depth.getKinectMapFromFile("depth_texture.bin");
+    //depth.makeSimpleMap();
+  }
   btVector3 camSpace = camera(loc);
   camSpace = (depth.trans.inverse())(camSpace);
   /*This way, spheres behind the camera will not be drawn*/
