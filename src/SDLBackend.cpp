@@ -54,6 +54,53 @@ void SDLBackend::drawAxis(const btTransform & camera){
   
 }
 
+bool SDLBackend::checkSphere(const DepthMap& depth,
+                             const btVector3& camSpace, 
+                             const btVector3& screenSpace, 
+                             const float r) {
+  uint8_t *p;
+  uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
+                         m_display->pitch * m_display->h;
+  // Perspective projection
+  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * ZOOM) : (int)r;
+  if(bound < 1) bound = 1;
+
+  int bpp = m_display->format->BytesPerPixel;
+  int bsq = bound * bound; // screen-space radius squared
+  float unproject = r / (float)bound;
+
+  for(int y = -bound; y < bound; y++) {
+    if(screenSpace.y() + y >= m_display->h || screenSpace.y() + y < 0) break;
+    const int rowBound = (int)sqrt(bsq - y*y);
+    const int ysq = y * y;
+    p = (uint8_t*)m_display->pixels + \
+        ((int)(screenSpace.y() - bound) + y) * m_display->pitch + \
+        (int)(screenSpace.x() - rowBound)*bpp;
+    if(p < m_display->pixels) continue;
+    if(p >= endOfBuffer) break;
+
+    for(int x = -rowBound; x < rowBound; x++, p += 4) {
+      if(p >= endOfBuffer || screenSpace.x() >= m_display->w) break;
+      if(screenSpace.x() + x < 0) continue;
+      
+      // We know that r^2 = x^2 + y^2 + z^2 in the sphere's coordinate
+      // frame.  So we need to go from our screen space x' and y' to
+      // sphere x and y. Or do we? Consider the equator of the
+      // projected sphere: we know the x' coordinate will vary from
+      // -bound to bound, the y' coordinate will be zero, and the z'
+      // coordinate will vary from zero to bound and back to zero.  We
+      // want a way of computing sphere-space z from screen space x'
+      // and y'. We do this by computing z', then undoing the
+      // perspective projection.
+
+      float ptDepth = camSpace.z() + sqrt(bsq - x*x - y*y) * unproject;
+      if(!depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
+        return false;
+    }
+  }
+  return true;
+}
+
 /* Draw a sphere with shading indicating depth. */
 void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   drawAxis(camera);
@@ -65,8 +112,8 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   /*This way, spheres behind the camera will not be drawn*/
   if(camSpace.z()<0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
-  //\cout<<"x y: "<<pt.x()<<" "<<pt.y()<<endl;
-  // FIXME: the screen coordinate system scaling factor hack (10x)
+
+  // FIXME: the screen coordinate system scaling factor hack (ZOOM)
   // appears both here and in cameraToScreen.
 
   // Perspective projection
@@ -77,10 +124,9 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
   uint8_t *p;
   int colorScale = 128 / bound;
   int bsq = bound * bound; // radius squared
+  bool sphereCollides = checkSphere(depth, camSpace, pt, r);
 
   // Pixel ordering is ARGB.
-  // const uint32_t pixel = 255 | 255 << 16; // little-endian opaque green pixel
-
   uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
                          m_display->pitch * m_display->h;
   for(int y = -bound; y < bound; y++) {
@@ -94,13 +140,10 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
     if(p >= endOfBuffer) break;
 
     for(int x = -rowBound; x < rowBound; x++, p += 4) {
-      if(p >= endOfBuffer || pt.x() >= m_display->w) break;
+      if(p >= endOfBuffer || pt.x() + x >= m_display->w) break;
       if(pt.x() + x < 0) continue;
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
-      
-      float sphereDepth = camSpace.length()+sqrt(r*r-((((double)r)/((double)bound))*x)*((((double)r)/((double)bound))*x)-((((double)r)/((double)bound))*y)*((((double)r)/((double)bound))*y)); 
-      
-      if(depth.collides(pt.x() + x, pt.y() + y, sphereDepth)){
+      if(sphereCollides) {      
 	p[1] = 0;
 	p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
 	p[3] = 0;
@@ -110,7 +153,6 @@ void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
 	p[2] = 0;
 	p[3] = 0;
       }
-      if(pt.x() + x >= m_display->w) break;
     }
   }
 }

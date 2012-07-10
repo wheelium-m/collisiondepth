@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "Model.h"
+#include "DepthMap.h"
 #include <SDL.h>
 #include <btBulletDynamicsCommon.h>
 #include <SDL_framerate.h>
@@ -20,6 +21,10 @@ private:
   void drawAxis(const btTransform &camera);
   void render(const btTransform& camera);
   void renderModel(const ModelTree& m, const btTransform& camera);
+  bool checkSphere(const DepthMap& depth,
+                   const btVector3& camSpace, 
+                   const btVector3& screenSpace, 
+                   const float r);
   void drawSphere(const btTransform& camera, btVector3 loc, float r);
   btVector3 cameraToScreen(btVector3 pt);
 };
