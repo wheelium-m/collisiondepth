@@ -2,6 +2,8 @@
 #include "MapMaker.h"
 #include <fstream>
 
+using namespace std;
+
 MapMaker::MapMaker() {
   nRetVal = XN_STATUS_OK;
   nRetVal = context.Init();
