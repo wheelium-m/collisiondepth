@@ -8,6 +8,14 @@
 #include <btBulletDynamicsCommon.h>
 #include <SDL_framerate.h>
 
+// A sphere in the camera's coordinate frame
+struct CameraSphere {
+  btVector3 center;
+  float r;
+  CameraSphere(btVector3 c, float r) : center(c), r(r) {}
+};
+
+
 class SDLBackend : public Renderer {
 public:
   SDLBackend();
@@ -25,7 +33,7 @@ private:
                    const btVector3& camSpace, 
                    const btVector3& screenSpace, 
                    const float r);
-  void drawSphere(const btTransform& camera, btVector3 loc, float r);
+  void drawSphere(const CameraSphere&);
   btVector3 cameraToScreen(btVector3 pt);
 };
 

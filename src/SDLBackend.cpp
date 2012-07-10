@@ -101,15 +101,48 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
   return true;
 }
 
+struct SphereCompare {
+  bool operator()(CameraSphere a, CameraSphere b) { 
+    return (a.center.z() - a.r) > (b.center.z() - b.r);
+  }
+} sphereCmp;
+
+// Sort all sphere's in a model according to distance from camera.
+void painterSort(const ModelTree& root, 
+                 const btTransform& camera, 
+                 vector<CameraSphere>& v) {
+  btVector3 origin(0,0,0);
+  queue<pair<ModelTree*, btTransform> > q;
+
+  for(ModelTree::child_iterator it = root.begin();
+      it != root.end();
+      it++) {
+    q.push(make_pair(*it, root.curr->trans));
+  }
+  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius));
+  while(!q.empty()) {
+    ModelTree* m = q.front().first;
+    btTransform t = q.front().second * m->curr->trans;
+    q.pop();
+    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius));
+    for(int i = 0; i < m->curr->points.size(); i++)
+      v.push_back(CameraSphere(camera(t(m->curr->points[i])), m->curr->radius / 3.0));
+
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
+      q.push(make_pair(*it, t));
+  }
+  sort(v.begin(), v.end(), sphereCmp);
+}
+
 /* Draw a sphere with shading indicating depth. */
-void SDLBackend::drawSphere(const btTransform &camera, btVector3 loc, float r) {
-  drawAxis(camera);
+void SDLBackend::drawSphere(const CameraSphere& sphere) {
   static DepthMap depth;
   if(!depth.map){
     depth.getKinectMapFromFile("depth_texture.bin");
     //depth.makeSimpleMap();
   }
-  btVector3 camSpace = camera(loc);
+  btVector3 camSpace = sphere.center;
+  float r = sphere.r;
   camSpace = (depth.trans.inverse())(camSpace);
   /*This way, spheres behind the camera will not be drawn*/
   if(camSpace.z()<0.0) return;
@@ -186,7 +219,7 @@ void SDLBackend::render(const btTransform &camera) {
     filledCircleRGBA(m_display, (Sint16)pt.x(), (Sint16)pt.y(), 100, \
                      255, 0, 0, 255);
   }
-  drawSphere(camera, btVector3(12,12,0), 4);
+  drawSphere(CameraSphere(camera(btVector3(12,12,0)), 4));
   SDL_Flip(m_display);
 }
 
@@ -195,11 +228,17 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   btVector3 origin(0,0,0);
 
   map<string,float> posture;
-  // Lift the PR2's left arm by 45 degrees
+  // Lift the PR2's left arm by 45 degrees and swing the right arm out.
   posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
+  posture["r_shoulder_pan_link"] = -45.0f * PI / 180;
   ModelTree* root = poseModel(rawRoot, posture);
-  
-  drawSphere(camera, root->curr->trans(origin), root->curr->radius);
+
+  vector<CameraSphere> spheres;
+  painterSort(*root, camera, spheres);
+  for(int i = 0; i < spheres.size(); i++) drawSphere(spheres[i]);
+
+/*
+  drawSphere(CameraSphere(camera(root->curr->trans(origin)), root->curr->radius));
   queue<pair<ModelTree*, btTransform> > q;
   for(vector<ModelTree*>::const_iterator it = root->begin();
       it != root->end();
@@ -210,14 +249,17 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
     ModelTree* m = q.front().first;
     btTransform t = q.front().second*m->curr->trans; 
     q.pop();
-    drawSphere(camera, t(origin), m->curr->radius);
+    drawSphere(CameraSphere(camera(t(origin)), m->curr->radius));
     for(int i = 0; i < m->curr->points.size();i++){
-      drawSphere(camera, t(m->curr->points[i]), m->curr->radius/3.0);
+      drawSphere(CameraSphere(camera(t(m->curr->points[i])), m->curr->radius / 3.0));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
   }
+*/
+
   freePosedModel(root);
+  drawAxis(camera);
   SDL_Flip(m_display);
 }
 
