@@ -58,32 +58,47 @@ void SDLBackend::drawAxis(const btTransform & camera){
 bool SDLBackend::checkSphere(const DepthMap& depth,
                              const btVector3& camSpace, 
                              const btVector3& screenSpace, 
-                             const float r) {
-  uint8_t *p;
-  uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
-                         m_display->pitch * m_display->h;
+                             const float r,
+                             vector<list<pair<int,int> > >& spans) {
   // Perspective projection
   int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * ZOOM) : (int)r;
   if(bound < 1) bound = 1;
 
-  int bpp = m_display->format->BytesPerPixel;
   int bsq = bound * bound; // screen-space radius squared
   float unproject = r / (float)bound;
 
+  const int screenX = (int)screenSpace.x();
+  const int screenY = (int)screenSpace.y();
+
+  // FIXME: These are ambigous cases where the geometry is
+  // off-screen. We need a three valued type rather than bool to
+  // support this.
+  if(screenY - bound >= m_display->h) return true;
+  if(screenY + bound < 0) return true;
+
   for(int y = -bound; y < bound; y++) {
-    if(screenSpace.y() + y >= m_display->h || screenSpace.y() + y < 0) break;
+    if(screenY + y >= m_display->h) break;
+    if(screenY + y < 0) continue;
+
     const int rowBound = (int)sqrt(bsq - y*y);
     const int ysq = y * y;
-    p = (uint8_t*)m_display->pixels + \
-        ((int)(screenSpace.y() - bound) + y) * m_display->pitch + \
-        (int)(screenSpace.x() - rowBound)*bpp;
-    if(p < m_display->pixels) continue;
-    if(p >= endOfBuffer) break;
+    int rowIndex = screenY + y;
+    list<pair<int,int> >* row = &spans[rowIndex];
+    listCIt rowCurr = row->begin();
+    listCIt rowEnd = row->end();
 
-    for(int x = -rowBound; x < rowBound; x++, p += 4) {
-      if(p >= endOfBuffer || screenSpace.x() >= m_display->w) break;
-      if(screenSpace.x() + x < 0) continue;
-      
+    int left = -rowBound;
+    if(left + screenX >= m_display->w) continue;
+    if(screenX + left < 0) left = -screenX;
+
+    int right = rowBound;
+    if(right + screenX < 0) continue;
+    if(screenX + right >= m_display->w) 
+      right = m_display->w - 1 - screenX;
+
+    if(left > right) continue;
+
+    for(int x = left; x < right;) {
       // We know that r^2 = x^2 + y^2 + z^2 in the sphere's coordinate
       // frame.  So we need to go from our screen space x' and y' to
       // sphere x and y. Or do we? Consider the equator of the
@@ -95,9 +110,10 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
       // perspective projection.
 
       float ptDepth = camSpace.z() + sqrt(bsq - x*x - ysq) * unproject;
-      if(!depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
-        return false;
+      if(!depth.collides(screenX + x, rowIndex, ptDepth)) return false;
+      x = nextFreeIndex(rowEnd, rowCurr, x + screenX) - screenX;
     }
+    //addInterval(screenSpace.x() + left, screenSpace.x() + right, row);
   }
   return true;
 }
@@ -127,7 +143,8 @@ void painterSort(const ModelTree& root,
     q.pop();
     v.push_back(CameraSphere(camera(t(origin)), m->curr->radius));
     for(int i = 0; i < m->curr->points.size(); i++)
-      v.push_back(CameraSphere(camera(t(m->curr->points[i])), m->curr->radius / 3.0));
+      v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
+                               m->curr->radius / 3.0));
 
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
@@ -136,7 +153,8 @@ void painterSort(const ModelTree& root,
 }
 
 /* Draw a sphere with shading indicating depth. */
-void SDLBackend::drawSphere(const CameraSphere& sphere) {
+void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals, 
+                            const CameraSphere& sphere) {
   static DepthMap depth;
   if(!depth.map){
     depth.getKinectMapFromFile("depth_texture.bin");
@@ -145,8 +163,8 @@ void SDLBackend::drawSphere(const CameraSphere& sphere) {
   btVector3 camSpace = sphere.center;
   float r = sphere.r;
   camSpace = (depth.trans.inverse())(camSpace);
-  /*This way, spheres behind the camera will not be drawn*/
-  if(camSpace.z()<0.0) return;
+  /* This way, spheres behind the camera will not be drawn. */
+  if(camSpace.z() - r < 0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
 
   // FIXME: the screen coordinate system scaling factor hack (ZOOM)
@@ -160,24 +178,40 @@ void SDLBackend::drawSphere(const CameraSphere& sphere) {
   uint8_t *p;
   int colorScale = 128 / bound;
   int bsq = bound * bound; // radius squared
-  bool sphereCollides = checkSphere(depth, camSpace, pt, r);
+  bool sphereCollides = checkSphere(depth, camSpace, pt, r, rowIntervals);
+
+  const int screenX = (int)pt.x();
+  const int screenY = (int)pt.y();
+
+  // Geometry is completely off-screen
+  if(screenY - bound >= m_display->h) return;
+  if(screenY + bound < 0) return;
 
   // Pixel ordering is ARGB.
-  uint8_t *endOfBuffer = (uint8_t*)m_display->pixels + \
-                         m_display->pitch * m_display->h;
   for(int y = -bound; y < bound; y++) {
-    if(pt.y() + y >= m_display->h || pt.y() + y < 0) break;
+    if(screenY + y >= m_display->h) break;
+    if(screenY + y < 0) continue;
     const int rowBound = (int)sqrt(bsq - y*y);
     const int ysq = y * y;
-    p = (uint8_t*)m_display->pixels + \
-        ((int)(pt.y() - bound) + y) * m_display->pitch + \
-        (int)(pt.x() - rowBound)*bpp;
-    if(p < m_display->pixels) continue;
-    if(p >= endOfBuffer) break;
+    list<pair<int,int> >* row = &rowIntervals[screenY + y];
+    listCIt rowCurr = row->begin();
+    listCIt rowEnd = row->end();
 
-    for(int x = -rowBound; x < rowBound; x++, p += 4) {
-      if(p >= endOfBuffer || pt.x() + x >= m_display->w) break;
-      if(pt.x() + x < 0) continue;
+    int left = -rowBound;
+    if(left + screenX >= m_display->w) continue;
+    if(screenX + left < 0) left = -screenX;
+
+    int right = rowBound;
+    if(right + screenX < 0) continue;
+    if(screenX + right >= m_display->w) right = m_display->w - 1 - screenX;
+
+    if(left > right) continue;
+
+    p = (uint8_t*)m_display->pixels + \
+        (screenY + y) * m_display->pitch + \
+        (screenX + left)*bpp;
+
+    for(int x = left; x < right;) {
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
       if(sphereCollides) {      
 	p[1] = 0;
@@ -189,7 +223,14 @@ void SDLBackend::drawSphere(const CameraSphere& sphere) {
 	p[2] = 0;
 	p[3] = 0;
       }
+
+      int nxt = nextFreeIndex(rowEnd, rowCurr, x + screenX) - screenX;
+      p += 4 * (nxt - x);
+      x = nxt;
     }
+    // Note that this means we only render backfaces which is good for
+    // depth testing, but bad for visualization.
+    //addInterval(screenX + left, screenX + right, row);
   }
 }
 
@@ -209,8 +250,7 @@ bool SDLBackend::init(int width, int height) {
   return true;
 }
 
-/* Render the model (currently hard coded here) in the given camera's
- * coordinate frame. */
+/* Render the model in the given camera's coordinate frame. */
 void SDLBackend::render(const btTransform &camera) {
   SDL_FillRect(m_display, NULL, 0);
   Model m = model();
@@ -220,7 +260,8 @@ void SDLBackend::render(const btTransform &camera) {
     filledCircleRGBA(m_display, (Sint16)pt.x(), (Sint16)pt.y(), 100, \
                      255, 0, 0, 255);
   }
-  drawSphere(CameraSphere(camera(btVector3(12,12,0)), 4));
+  ScanlineIntervals dummy(m_display->h);
+  drawSphere(dummy, CameraSphere(camera(btVector3(12,12,0)), 4));
   SDL_Flip(m_display);
 }
 
@@ -236,7 +277,9 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
 
   vector<CameraSphere> spheres;
   painterSort(*root, camera, spheres);
-  for(int i = 0; i < spheres.size(); i++) drawSphere(spheres[i]);
+
+  vector<list<pair<int,int> > > rowIntervals(m_display->h);
+  for(int i = 0; i < spheres.size(); i++) drawSphere(rowIntervals, spheres[i]);
 
 /*
   drawSphere(CameraSphere(camera(root->curr->trans(origin)), root->curr->radius));

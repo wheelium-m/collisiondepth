@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Model.h"
 #include "DepthMap.h"
+#include <list>
 #include <SDL.h>
 #include <btBulletDynamicsCommon.h>
 #include <SDL_framerate.h>
@@ -15,6 +16,7 @@ struct CameraSphere {
   CameraSphere(btVector3 c, float r) : center(c), r(r) {}
 };
 
+typedef std::vector<std::list<std::pair<int,int> > > ScanlineIntervals;
 
 class SDLBackend : public Renderer {
 public:
@@ -32,8 +34,9 @@ private:
   bool checkSphere(const DepthMap& depth,
                    const btVector3& camSpace, 
                    const btVector3& screenSpace, 
-                   const float r);
-  void drawSphere(const CameraSphere&);
+                   const float r,
+                   ScanlineIntervals& spans);
+  void drawSphere(ScanlineIntervals& spans, const CameraSphere&);
   btVector3 cameraToScreen(btVector3 pt);
 };
 
