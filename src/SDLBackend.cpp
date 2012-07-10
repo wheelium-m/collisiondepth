@@ -4,6 +4,7 @@
 #include <queue>
 #include <iostream>
 #include "DepthMap.h"
+#include "Intervals.h"
 
 using namespace std;
 

@@ -4,7 +4,7 @@ CFLAGS += -Iinclude $(shell pkg-config --cflags bullet) $(shell pkg-config --cfl
 
 LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
  $(shell pkg-config --libs SDL_gfx)
-OBJS = SDLBackend.o Model.o
+OBJS = SDLBackend.o Model.o Intervals.o
 
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL -g
