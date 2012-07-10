@@ -93,8 +93,8 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
       // and y'. We do this by computing z', then undoing the
       // perspective projection.
 
-      float ptDepth = camSpace.z() + sqrt(bsq - x*x - y*y) * unproject;
-      if(depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
+      float ptDepth = camSpace.z() + sqrt(bsq - x*x - ysq) * unproject;
+      if(!depth.collides(screenSpace.x() + x, screenSpace.y() + y, ptDepth)) 
         return false;
     }
   }
@@ -190,18 +190,21 @@ void SDLBackend::render(const btTransform &camera) {
   SDL_Flip(m_display);
 }
 
-
-
-void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
+void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera) {
   SDL_FillRect(m_display, NULL, 0);
   btVector3 origin(0,0,0);
+
+  map<string,float> posture;
+  // Lift the PR2's left arm by 45 degrees
+  posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
+  ModelTree* root = poseModel(rawRoot, posture);
   
-  drawSphere(camera, root.curr->trans(origin), root.curr->radius);
+  drawSphere(camera, root->curr->trans(origin), root->curr->radius);
   queue<pair<ModelTree*, btTransform> > q;
-  for(vector<ModelTree*>::const_iterator it = root.begin();
-      it != root.end();
+  for(vector<ModelTree*>::const_iterator it = root->begin();
+      it != root->end();
       it++) {
-    q.push(make_pair(*it, root.curr->trans));
+    q.push(make_pair(*it, root->curr->trans));
   }
   while(!q.empty()) {
     ModelTree* m = q.front().first;
@@ -214,6 +217,7 @@ void SDLBackend::renderModel(const ModelTree& root, const btTransform &camera) {
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
   }
+  freePosedModel(root);
   SDL_Flip(m_display);
 }
 

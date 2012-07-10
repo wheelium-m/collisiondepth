@@ -9,10 +9,10 @@ all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL  -I/usr/include/ni -lOpenNI -g
 
 mac:	src/main.cpp ${OBJS}
-	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT  -I/usr/include/ni -lOpenNI -g
+	${CC} $^ ${CFLAGS} ${LIBS} -framework OpenGL -framework GLUT -I/usr/include/ni
 
-$(OBJS):	%.o: src/%.cpp 
-	${CC} ${CFLAGS} -c $< -o $@  -I/usr/include/ni -lOpenNI -g
+$(OBJS):	%.o: src/%.cpp
+	${CC} ${CFLAGS} -c $< -o $@ -I/usr/include/ni -lOpenNI
 
 .PHONY:	clean
 

@@ -52,7 +52,7 @@ ModelTree* readDump(const char* fileName) {
     btVector3 axis = readVector(f);
     f.ignore(256, '\n');
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
-    joints.push_back(Joint(s, t, originPoint, 0.1f));
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1f));
   }
 
   // Read in robot model graph arcs
@@ -85,15 +85,15 @@ ModelTree* readDump(const char* fileName) {
   return root;
 }
 
-void makeSpheres(ModelTree *t){
+void makeSpheres(ModelTree *t) {
   double spacing = 0.1;
-  for(ModelTree::child_iterator it = t->begin(); it!=t->end(); it++){
+  for(ModelTree::child_iterator it = t->begin(); it!=t->end(); it++) {
     btVector3 loc = (*it)->curr->trans(btVector3(0.0,0.0,0.0));
     btVector3 step = (loc/loc.length())*spacing;
-    for(btVector3 sphere = *(new btVector3(0.0,0.0,0.0));sphere.length()<loc.length();sphere+=step){
-	t->curr->points.push_back(sphere);
-      }
-    makeSpheres((ModelTree *)(*it));
+    for(btVector3 sphere; sphere.length() < loc.length(); sphere+=step) {
+      t->curr->points.push_back(sphere);
+    }
+    makeSpheres(*it);
   }
 }
 
@@ -114,4 +114,55 @@ ModelTree* initTestTree() {
 const ModelTree& testTree() {
   static ModelTree* t = initTestTree();
   return *t;
+}
+
+// Assign joint angles (angles given in radians).
+ModelTree* poseModel(const ModelTree& root, 
+                     const map<string,float>& jointAngles) {
+  ModelTree* posed = new ModelTree(new Joint(*root.curr));
+  queue<pair<ModelTree*, ModelTree*> > q;
+
+  for(ModelTree::child_iterator it = root.begin();
+      it != root.end();
+      it++) {
+    q.push(make_pair(posed, *it));
+  }
+  
+  while(!q.empty()) {
+    ModelTree* parent = q.front().first;
+    ModelTree* n = q.front().second;
+    q.pop();
+    Joint* j = new Joint(*n->curr);
+    const map<string,float>::const_iterator angle = 
+      jointAngles.find(n->curr->name);
+    if(angle != jointAngles.end()) {
+      j->trans.setRotation(btQuaternion(j->axis, angle->second));
+    }
+    ModelTree* n2 = new ModelTree(j);
+    parent->add_child(n2);
+
+    for(ModelTree::child_iterator it = n->begin(); 
+        it != n->end();
+        it++) {
+      q.push(make_pair(n2, *it));
+    }
+  }
+  return posed;
+}
+
+// Posed (e.g. animated) models must be explicitly freed.
+void freePosedModel(ModelTree* m) {
+  queue<ModelTree*> q;
+  q.push(m);
+  while(!q.empty()) {
+    ModelTree* n = q.front();
+    q.pop();
+    for(ModelTree::child_iterator it = n->begin();
+        it != n->end();
+        it++) {
+      q.push(*it);
+    }
+    delete n->curr; // Delete the Joint
+    delete n;       // Delete the ModelTree
+  }
 }

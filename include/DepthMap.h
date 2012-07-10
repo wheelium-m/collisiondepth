@@ -18,7 +18,7 @@ public:
   /* Specifies the camera transformation. */
   btTransform trans;
   DepthMap() 
-    : width(0), height(0), map(NULL), trans(*(new btTransform())) {};
+    : width(0), height(0), map(NULL), trans(btTransform::getIdentity()) {};
   DepthMap(int x, int y, float * m, btTransform t)
     : width(x), height(y), map(m), trans(t) {};
   DepthMap(const DepthMap &d)
