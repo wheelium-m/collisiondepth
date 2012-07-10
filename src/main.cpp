@@ -1,9 +1,6 @@
-#include <XnCppWrapper.h>
-#include "MapMaker.h"
 #include <iostream>
 #include <btBulletDynamicsCommon.h>
 #include "SDLBackend.h"
-
 
 #define DEG2RAD(x) (x*3.14159/180.0)
 
@@ -35,9 +32,6 @@ void goSDL() {
 
 int main(int argc, char** argv) {
   cout << "Starting..." << endl;
-  //MapMaker m;
-  //for(int i = 0; i < 30; i++)
-  //  m.grabFrame();
   goSDL();
   cout << "Ending." << endl;
   return 0;

@@ -1,5 +1,4 @@
 #include <XnCppWrapper.h>
-#include "DepthMap.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -16,5 +15,3 @@ class MapMaker{
  private:
   void checkError(std::string where, XnStatus what);
 };
-
-

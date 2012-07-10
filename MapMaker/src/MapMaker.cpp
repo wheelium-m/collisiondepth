@@ -1,7 +1,8 @@
 #include <XnCppWrapper.h>
 #include "MapMaker.h"
 #include <fstream>
-MapMaker::MapMaker(){
+
+MapMaker::MapMaker() {
   nRetVal = XN_STATUS_OK;
   nRetVal = context.Init();
   checkError("Error creating context: ", nRetVal);
@@ -9,14 +10,17 @@ MapMaker::MapMaker(){
   checkError("Error creating depth generator: ", nRetVal);
   init();
 }
-void MapMaker::init(){
+
+void MapMaker::init() {
   nRetVal = context.StartGeneratingAll();
   checkError("Error starting the depth generator: ", nRetVal);
-};
-void MapMaker::stop(){
+}
+
+void MapMaker::stop() {
   xnContextRelease((XnContext*)&context);
 }
-void MapMaker::grabFrame(){
+
+void MapMaker::grabFrame() {
   nRetVal = context.WaitOneUpdateAll(depth);
   checkError("Failed updating data: ", nRetVal);
   // Take current depth map  
@@ -32,10 +36,11 @@ void MapMaker::grabFrame(){
   //std::cout<<"pDepthMap[0] = "<<pDepthMap[0]<<endl;
 }
 
-void MapMaker::checkError(std::string where, XnStatus what){
+void MapMaker::checkError(std::string where, XnStatus what) {
   if(!(nRetVal==XN_STATUS_OK)){
     cout<<where<<xnGetStatusString(what)<<endl;
     exit(0);
   }
   return;
 }
+
