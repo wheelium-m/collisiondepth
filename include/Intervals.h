@@ -6,24 +6,24 @@ typedef std::list<std::pair<int,int> >::iterator listIt;
 typedef std::list<std::pair<int,int> >::const_iterator listCIt;
 
 // Add an interval to a list of intervals for a particular scanline.
-inline void addInterval(int start, int stop, list<pair<int,int> >* spans) {
+inline void addInterval(int start, int stop, std::list<std::pair<int,int> >* spans) {
   if(0 == spans->size()) {
-    spans->push_front(make_pair(start, stop));
+    spans->push_front(std::make_pair(start, stop));
   } else {
     for(listIt it = spans->begin(); it != spans->end(); it++) {
       if(start <= it->first) {
         if(stop >= it->first) {
           // Merge the new interval with an existing one.
           it->first = start;
-          it->second = max(stop, it->second);
+          it->second = std::max(stop, it->second);
         } else {
           // Insert the new interval
-          spans->insert(it, make_pair(start,stop));
+          spans->insert(it, std::make_pair(start,stop));
         }
         return;
       }
     }
-    spans->push_back(make_pair(start,stop));
+    spans->push_back(std::make_pair(start,stop));
   }
 }
 

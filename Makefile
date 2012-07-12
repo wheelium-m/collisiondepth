@@ -5,7 +5,7 @@ CFLAGS += -Iinclude $(shell pkg-config --cflags bullet)\
 
 LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
  $(shell pkg-config --libs SDL_gfx)
-OBJS = SDLBackend.o Model.o HeatPalette.o
+OBJS = SDLBackend.o Model.o HeatPalette.o DepthMap.o
 
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL -g

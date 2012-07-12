@@ -31,7 +31,7 @@ private:
                    ScanlineIntervals& spans);
   void drawSphere(ScanlineIntervals& spans, const CameraSphere&, DepthMap depth);
   btVector3 cameraToScreen(btVector3 pt);
-  void drawDepthMap(DepthMap depth);
+  void drawDepthMap(const DepthMap& depth);
 };
 
 #endif
