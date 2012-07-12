@@ -177,15 +177,14 @@ void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals,
 
     for(int x = left; x < right;) {
       int depthColor = sqrt(bsq - x*x - ysq) * colorScale;
+      uint8_t shade = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
       if(sphereCollides) {      
-	p[1] = 0;
-	p[2] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
-	p[3] = 0;
+        uint32_t col = SDL_MapRGB(m_display->format, 0, shade, 0);
+        memcpy(p, &col, 4);
       }
       else{
-	p[1] = (uint8_t)(128 + depthColor < 255 ? 128 + depthColor : 255);
-	p[2] = 0;
-	p[3] = 0;
+        uint32_t col = SDL_MapRGB(m_display->format, shade, 0, 0);
+        memcpy(p, &col, 4);
       }
 
       int nxt = nextFreeIndex(rowEnd, rowCurr, x + screenX) - screenX;
@@ -297,7 +296,8 @@ void SDLBackend::drawDepthMap(DepthMap depth){
   for(int i = 0; i < depth.width*depth.height;i++){
     //(p+bpp*i)[1] = 255-(int)((*(depth.map+i)/maxval)*255);
     const uint8_t* col = getColor(min(1.0f, *(depth.map+i) / maxval));
-    memcpy(p+1+bpp*i, col, 3);
+    uint32_t sdlCol = SDL_MapRGB(m_display->format, col[0], col[1], col[2]);
+    memcpy(p+bpp*i, &sdlCol, 4);
   }
 }
 
