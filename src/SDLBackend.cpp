@@ -5,6 +5,7 @@
 #include <iostream>
 #include "DepthMap.h"
 #include "Intervals.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -154,12 +155,8 @@ void painterSort(const ModelTree& root,
 
 /* Draw a sphere with shading indicating depth. */
 void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals, 
-                            const CameraSphere& sphere) {
-  static DepthMap depth;
-  if(!depth.map){
-    depth.getKinectMapFromFile("depth_texture.bin");
-    //depth.makeSimpleMap();
-  }
+                            const CameraSphere& sphere, DepthMap depth) {
+  
   btVector3 camSpace = sphere.center;
   float r = sphere.r;
   camSpace = (depth.trans.inverse())(camSpace);
@@ -261,7 +258,12 @@ void SDLBackend::render(const btTransform &camera) {
                      255, 0, 0, 255);
   }
   ScanlineIntervals dummy(m_display->h);
-  drawSphere(dummy, CameraSphere(camera(btVector3(12,12,0)), 4));
+  static DepthMap depth;
+  if(!depth.map){
+    depth.getKinectMapFromFile("depth_texture.bin");
+    //depth.makeSimpleMap();
+  }
+  drawSphere(dummy, CameraSphere(camera(btVector3(12,12,0)), 4), depth);
   SDL_Flip(m_display);
 }
 
@@ -279,7 +281,16 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   painterSort(*root, camera, spheres);
 
   vector<list<pair<int,int> > > rowIntervals(m_display->h);
-  for(int i = 0; i < spheres.size(); i++) drawSphere(rowIntervals, spheres[i]);
+  
+  static DepthMap depth;
+  if(!depth.map){
+    depth.getKinectMapFromFile("depth_texture.bin");
+    //depth.makeSimpleMap();
+  }
+
+  drawDepthMap(depth);
+
+  for(int i = 0; i < spheres.size(); i++) drawSphere(rowIntervals, spheres[i], depth);
 
 /*
   drawSphere(CameraSphere(camera(root->curr->trans(origin)), root->curr->radius));
@@ -305,6 +316,20 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   freePosedModel(root);
   drawAxis(camera);
   SDL_Flip(m_display);
+}
+
+void SDLBackend::drawDepthMap(DepthMap depth){
+  int maxval = 0;
+  int bpp = m_display->format->BytesPerPixel;
+  uint8_t *p;
+  for(int i = 0; i < depth.width*depth.height;i++){
+    if(*(depth.map+i)>maxval)
+      maxval = *(depth.map+i);
+  }
+  p = (uint8_t*)m_display->pixels;
+  for(int i = 0; i < depth.width*depth.height;i++){
+    (p+bpp*i)[1] = 255-(int)((*(depth.map+i)/maxval)*255);
+    }
 }
 
 /* Check UI events, render the current frame, and return true if we
