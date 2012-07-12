@@ -39,7 +39,12 @@ public:
     
     map = (float *)malloc(640*480*sizeof(float));
     for(int i = 0; i < (640*480); i++){
-      *(map+i)=1.5;
+      *(map+i)=10.0;
+      }
+    for(int i = 120; i < 360; i++){
+      for(int j = 160; j < 480; j++){
+	*(map+i*640+j)=1.5;
+      }
     }
   }
 

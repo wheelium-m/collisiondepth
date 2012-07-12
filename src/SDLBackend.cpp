@@ -260,8 +260,8 @@ void SDLBackend::render(const btTransform &camera) {
   ScanlineIntervals dummy(m_display->h);
   static DepthMap depth;
   if(!depth.map){
-    depth.getKinectMapFromFile("depth_texture.bin");
-    //depth.makeSimpleMap();
+    //depth.getKinectMapFromFile("depth_texture.bin");
+    depth.makeSimpleMap();
   }
   drawSphere(dummy, CameraSphere(camera(btVector3(12,12,0)), 4), depth);
   SDL_Flip(m_display);
@@ -284,8 +284,8 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   
   static DepthMap depth;
   if(!depth.map){
-    depth.getKinectMapFromFile("depth_texture.bin");
-    //depth.makeSimpleMap();
+    //depth.getKinectMapFromFile("depth_texture.bin");
+    depth.makeSimpleMap();
   }
 
   drawDepthMap(depth);
