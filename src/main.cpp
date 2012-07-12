@@ -13,7 +13,7 @@ void go(Renderer& renderer) {
     return;
   }
 
-  btTransform cam(btQuaternion::getIdentity(), btVector3(0,0,1));
+  btTransform cam(btQuaternion::getIdentity(), btVector3(0,0,3));
 
   // Z-axis in new coordinate frame.
   btVector3 spinAxis = btTransform(cam.getRotation())(btVector3(0,0,1));

@@ -37,8 +37,10 @@ DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
 
   for(int y = 0; y < height; y++) {
     for(int x = 0; x < width; x++, old++, p++) {
-      float minDepth = *old;
-      const int pr = focalLength * r / minDepth; // Pixel radius
+      float minDepth = 1000.0f; //*old;
+      if(*old == 0.0f) continue;
+      // Pixel radius
+      const int pr = *old == 0.0f ? focalLength * r : focalLength * r / *old;
       const int prsq = pr * pr;
 
       // Now sample from a projection of a sphere centered at the
@@ -58,10 +60,10 @@ DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
 
         for(int cx = left; cx < right; cx++) {
           const float d = map[(cy+y)*width+cx+x];
-          if(d < minDepth) minDepth = d;
+          if(d > 0 && d < minDepth) minDepth = d;
         }
       }
-      *p = minDepth - r;
+      *p = max(0.0f, minDepth - r);
     }
   }
 

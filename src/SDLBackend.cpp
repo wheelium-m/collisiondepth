@@ -10,7 +10,8 @@
 
 using namespace std;
 
-#define ZOOM 180.0
+//#define ZOOM 180.0
+#define FOCAL_LENGTH 594.0
 #define PI 3.1415926535
 
 SDLBackend::SDLBackend() : m_display(NULL) {}
@@ -24,7 +25,7 @@ SDLBackend::~SDLBackend() {
 // Camera coordinate system to screen space
 inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
   // The scaling factor just zooms things in a bit. It is arbitrary.
-  static const btVector3 scale = btVector3(ZOOM, ZOOM, 1);
+  static const btVector3 scale = btVector3(FOCAL_LENGTH, FOCAL_LENGTH, 1);
   btVector3 v = pt * scale + cameraToScreenTranslation;
   return v;
 }
@@ -63,7 +64,7 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
                              const float r,
                              vector<list<pair<int,int> > >& spans) {
   // Perspective projection
-  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * ZOOM) : (int)r;
+  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * FOCAL_LENGTH) : (int)r;
   if(bound < 1) bound = 1;
 
   int bsq = bound * bound; // screen-space radius squared
@@ -131,11 +132,11 @@ void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals,
   if(camSpace.z() - r < 0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
 
-  // FIXME: the screen coordinate system scaling factor hack (ZOOM)
+  // FIXME: the screen coordinate system scaling factor hack (FOCAL_LENGTH)
   // appears both here and in cameraToScreen.
 
   // Perspective projection
-  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * ZOOM) : (int)r;
+  int bound = camSpace.z() != 0 ? (int)((r / camSpace.z()) * FOCAL_LENGTH) : (int)r;
 
   if(bound < 1) bound = 1;
   int bpp = m_display->format->BytesPerPixel;
@@ -257,7 +258,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
     // min-filter over the depthmap and then sample a single pixel for
     // each sphere. The window is defined by the projection of a
     // sphere centered at each point represented by a depth map pixel.
-    DepthMap* depthBloomed = depth.bloomDepths(180.0f, 0.25f);
+    DepthMap* depthBloomed = depth.bloomDepths(FOCAL_LENGTH, 0.1f);
     free(depth.map);
     depth.map = depthBloomed->map;
     delete depthBloomed;
