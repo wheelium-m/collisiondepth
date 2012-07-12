@@ -166,3 +166,37 @@ void freePosedModel(ModelTree* m) {
     delete n;       // Delete the ModelTree
   }
 }
+
+struct SphereCompare {
+  bool operator()(CameraSphere a, CameraSphere b) { 
+    return (a.center.z() - a.r) > (b.center.z() - b.r);
+  }
+} sphereCmp;
+
+// Sort all sphere's in a model according to distance from camera.
+void painterSort(const ModelTree& root, 
+                 const btTransform& camera, 
+                 vector<CameraSphere>& v) {
+  btVector3 origin(0,0,0);
+  queue<pair<ModelTree*, btTransform> > q;
+
+  for(ModelTree::child_iterator it = root.begin();
+      it != root.end();
+      it++) {
+    q.push(make_pair(*it, root.curr->trans));
+  }
+  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius));
+  while(!q.empty()) {
+    ModelTree* m = q.front().first;
+    btTransform t = q.front().second * m->curr->trans;
+    q.pop();
+    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius));
+    for(int i = 0; i < m->curr->points.size(); i++)
+      v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
+                               m->curr->radius / 3.0));
+
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
+      q.push(make_pair(*it, t));
+  }
+  sort(v.begin(), v.end(), sphereCmp);
+}
