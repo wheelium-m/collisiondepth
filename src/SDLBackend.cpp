@@ -5,6 +5,7 @@
 #include <iostream>
 #include "DepthMap.h"
 #include "Intervals.h"
+#include "HeatPalette.h"
 #include <algorithm>
 
 using namespace std;
@@ -285,7 +286,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
 }
 
 void SDLBackend::drawDepthMap(DepthMap depth){
-  int maxval = 0;
+  float maxval = 0;
   int bpp = m_display->format->BytesPerPixel;
   uint8_t *p;
   for(int i = 0; i < depth.width*depth.height;i++){
@@ -294,8 +295,10 @@ void SDLBackend::drawDepthMap(DepthMap depth){
   }
   p = (uint8_t*)m_display->pixels;
   for(int i = 0; i < depth.width*depth.height;i++){
-    (p+bpp*i)[1] = 255-(int)((*(depth.map+i)/maxval)*255);
-    }
+    //(p+bpp*i)[1] = 255-(int)((*(depth.map+i)/maxval)*255);
+    const uint8_t* col = getColor(min(1.0f, *(depth.map+i) / maxval));
+    memcpy(p+1+bpp*i, col, 3);
+  }
 }
 
 /* Check UI events, render the current frame, and return true if we
