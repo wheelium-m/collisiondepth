@@ -251,14 +251,14 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   
   static DepthMap depth;
   if(!depth.map){
-    //depth.getKinectMapFromFile("depth_texture.bin");
-    depth.makeSimpleMap();
+    depth.getKinectMapFromFile("depth_texture.bin");
+    //depth.makeSimpleMap();
 
     // If we use a uniform sphere size, then we can pass a windowed
     // min-filter over the depthmap and then sample a single pixel for
     // each sphere. The window is defined by the projection of a
     // sphere centered at each point represented by a depth map pixel.
-    DepthMap* depthBloomed = depth.bloomDepths(FOCAL_LENGTH, 0.1f);
+    DepthMap* depthBloomed = depth.bloomDepths(FOCAL_LENGTH, 0.05f);
     free(depth.map);
     depth.map = depthBloomed->map;
     delete depthBloomed;

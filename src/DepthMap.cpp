@@ -32,21 +32,26 @@ void DepthMap::getKinectMapFromFile(const char * filename) {
 DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
   DepthMap* d = new DepthMap(width, height, NULL, trans);
   float* old = map;
-  float* p = new float[width*height];
-  d->map = p;
+  d->map = new float[width*height];
+
+  // Default depth is set to 12.0784m
+  memset((uint8_t*)d->map, 65, sizeof(float)*width*height);
+
+  const float rFocalLength = focalLength * r;
 
   for(int y = 0; y < height; y++) {
-    for(int x = 0; x < width; x++, old++, p++) {
-      float minDepth = 1000.0f; //*old;
-      if(*old == 0.0f) continue;
+    for(int x = 0; x < width; x++, old++) {
+      float dist = *old;
+      if(dist == 0.0f) continue; // Don't splat unknown points
+
       // Pixel radius
-      const int pr = *old == 0.0f ? focalLength * r : focalLength * r / *old;
+      const int pr = (int)(rFocalLength / dist);
       const int prsq = pr * pr;
 
       // Now sample from a projection of a sphere centered at the
       // point of interest onto the existing depth map to find the
       // minimum depth.
-      for(int cy = -pr; cy < pr; cy++) {
+      for(int cy = -pr, rowOffset=(y-pr)*width; cy < pr; cy++, rowOffset += width) {
         if(cy + y >= height) break;
         if(cy + y < 0) continue;
         const int rowBound = (int)sqrt(prsq - cy*cy);
@@ -58,12 +63,11 @@ DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
         if(right + x < 0) continue;
         if(right + x >= width) right = width - 1 - x;
 
-        for(int cx = left; cx < right; cx++) {
-          const float d = map[(cy+y)*width+cx+x];
-          if(d > 0 && d < minDepth) minDepth = d;
+        for(int cx = left, colOffset = left+x; cx < right; cx++, colOffset++) {
+          float* const dOld = &d->map[rowOffset + colOffset];
+          if(dist < *dOld) *dOld = dist;
         }
       }
-      *p = max(0.0f, minDepth - r);
     }
   }
 
