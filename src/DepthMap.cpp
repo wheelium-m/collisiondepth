@@ -48,8 +48,8 @@ DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
       const int pr = (int)(rFocalLength / dist);
       const int prsq = pr * pr;
 
-      // Now sample from a projection of a sphere centered at the
-      // point of interest onto the existing depth map to find the
+      // Splat a projection of a sphere centered at the point of
+      // interest onto the new depth map to find a conservative
       // minimum depth.
       for(int cy = -pr, rowOffset=(y-pr)*width; cy < pr; cy++, rowOffset += width) {
         if(cy + y >= height) break;
