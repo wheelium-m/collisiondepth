@@ -1,6 +1,7 @@
 #include "DepthMap.h"
 #include <fstream>
 #include <iostream>
+#include <stdint.h>
 using namespace std;
 
 void DepthMap::makeSimpleMap() {

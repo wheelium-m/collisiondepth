@@ -3,6 +3,8 @@
 #include <fstream>
 #include <map>
 #include <queue>
+#include <algorithm>
+//#include "StlFile.h"
 
 using namespace std;
 
@@ -52,7 +54,7 @@ ModelTree* readDump(const char* fileName) {
     btVector3 axis = readVector(f);
     f.ignore(256, '\n');
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
-    joints.push_back(Joint(s, t, originPoint, axis, 0.1f));
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1f, (const char *)NULL));
   }
 
   // Read in robot model graph arcs
