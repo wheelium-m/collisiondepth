@@ -52,9 +52,10 @@ ModelTree* readDump(const char* fileName) {
     btVector3 translation = readVector(f);
     btVector3 rpy = readVector(f);
     btVector3 axis = readVector(f);
-    f.ignore(256, '\n');
+    string name;
+    getline(f,name,'\n');
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
-    joints.push_back(Joint(s, t, originPoint, axis, 0.1f, (const char *)NULL));
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
   }
 
   // Read in robot model graph arcs
@@ -100,7 +101,7 @@ void makeSpheres(ModelTree *t) {
 }
 
 ModelTree* initPR2() {
-  return readDump("UrdfDumper/etc/pr2.txt");
+  return readDump("UrdfDumper/etc/newpr2.txt");
 }
 
 const ModelTree& pr2() {

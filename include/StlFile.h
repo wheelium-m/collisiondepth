@@ -11,6 +11,9 @@ struct Point {
   Point(float *pts){
     xyz[0]=(*(pts)); xyz[1]=(*(pts+1)); xyz[2]=(*(pts+2));
   }
+  Point(float a, float b, float c){
+    xyz[0]=a; xyz[1]=b;xyz[2]=c;
+  }
 
 };
 
@@ -27,10 +30,13 @@ class StlFile {
   unsigned int numTriangles;
   vector<Point> normals;
   vector<Triangle> triangles;
+  
   StlFile();
   StlFile(const char * filename);
   StlFile(const StlFile & stl);
+  void ReadFile(const char *filename);
   void StlReadFile(const char *filename);
+  void DaeReadFile(const char *filename);
  private:
   void StlReadBinaryFile(const char * filename);
   void StlReadAsciiFile(const char * filename);

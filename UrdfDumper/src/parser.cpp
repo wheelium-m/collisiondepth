@@ -65,6 +65,14 @@ int dumpModel(std::ostream& s, int parent, int index, MJoint joint, MLink link,
   else {
     s << "(0, 0, 0) (0, 0, 0) (0, 0, 0)";
   }
+  
+  if(link->visual!=0&&link->visual->geometry!=0){
+    boost::shared_ptr<urdf::Mesh> pt =boost::dynamic_pointer_cast<urdf::Mesh>(link->visual->geometry);
+    if(pt!=0)
+      s << pt->filename;
+  }
+  else
+    s<<"";
   s << std::endl;
   if(parent > -1) arcs.push_back(std::pair<int,int>(parent,index));
   int n = index + 1;
@@ -117,8 +125,10 @@ void readDump(const char* fileName) {
     Vec3 axis = readVector(f);
     std::cout << " ";
     printVector(urdf::Vector3(axis.x, axis.y, axis.z));
-    std::cout << std::endl;
-    f.ignore(256, '\n');
+    std::cout << " ";
+    getline(f, s, '\n');
+    std::cout<<s<<std::endl;
+    
   }
 
   // Read in robot model graph arcs
