@@ -4,6 +4,7 @@
 #include "Renderer.h"
 #include "Model.h"
 #include "DepthMap.h"
+#include "CollisionChecker.h"
 #include <list>
 #include <SDL.h>
 #include <btBulletDynamicsCommon.h>
@@ -21,6 +22,7 @@ private:
   btVector3 cameraToScreenTranslation;
   SDL_Surface* m_display;
   FPSmanager* m_fps;
+  CollisionChecker* checker;
   void drawAxis(const btTransform &camera);
   void render(const btTransform& camera);
   void renderModel(const ModelTree& m, const btTransform& camera);
@@ -30,8 +32,10 @@ private:
                    const float r,
                    ScanlineIntervals& spans);
   void drawSphere(ScanlineIntervals& spans, const CameraSphere&, DepthMap depth);
+  void drawSphere(bool sphereCollides, ScanlineIntervals& spans, 
+                  const CameraSphere&, DepthMap depth);
   btVector3 cameraToScreen(btVector3 pt);
-  void drawDepthMap(const DepthMap& depth);
+  void drawDepthMap(const DepthMap& depth, const float r);
 };
 
 #endif

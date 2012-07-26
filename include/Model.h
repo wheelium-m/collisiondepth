@@ -14,7 +14,8 @@ typedef TreeNode<Joint> ModelTree;
 struct CameraSphere {
   btVector3 center;
   float r;
-  CameraSphere(btVector3 c, float r) : center(c), r(r) {}
+  string jointName;
+  CameraSphere(btVector3 c, float r, string n) : center(c), r(r), jointName(n) {}
 };
 
 // Obtain a reference to our static model data.
@@ -26,4 +27,8 @@ void freePosedModel(ModelTree*);
 void painterSort(const ModelTree& root,
                  const btTransform& camera,
                  std::vector<CameraSphere>& v);
+void transformSpheres(const ModelTree& root, 
+                      const btTransform& camera, 
+                      vector<CameraSphere>& v);
+
 #endif

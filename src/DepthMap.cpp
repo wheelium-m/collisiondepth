@@ -4,12 +4,19 @@
 #include <stdint.h>
 using namespace std;
 
-void DepthMap::makeSimpleMap() {
+void DepthMap::setRawMap(float* map) {
+  map_it it = dilatedMaps.find(0);
+  if(it != dilatedMaps.end()) delete (*it).second;
+  dilatedMaps[0] = map;
+}
+
+void DepthMap::makeSimpleMap(const float focalLength) {
   width = 640;
   height = 480;
+  this->focalLength = focalLength;
   trans = btTransform::getIdentity();
     
-  map = (float *)malloc(640*480*sizeof(float));
+  float* map = new float[640*480];
   for(int i = 0; i < (640*480); i++){
     *(map+i)=10.0;
   }
@@ -18,25 +25,33 @@ void DepthMap::makeSimpleMap() {
       *(map+i*640+j)=1.5;
     }
   }
+  setRawMap(map);
 }
 
-void DepthMap::getKinectMapFromFile(const char * filename) {
+void DepthMap::getKinectMapFromFile(const float focalLength, const char * filename) {
   ifstream file(filename, ios::in|ios::binary);
   width = 640;
   height = 480;
+  this->focalLength = focalLength;
   trans = btTransform::getIdentity();
-  map = (float *)malloc(640*480*4);
+  float* map = new float[640*480];
   file.read((char *)map, 640*480*4);
+  setRawMap(map);
+}
+
+void DepthMap::addDilation(const float r) {
+  map_it it = dilatedMaps.find(r);
+  if(it != dilatedMaps.end()) delete (*it).second;
+  dilatedMaps[r] = bloomDepths(dilatedMaps[0], r);
 }
 
 // We want focalLength in pixels, and sphere radius in meters.
-DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
-  DepthMap* d = new DepthMap(width, height, NULL, trans);
-  float* old = map;
-  d->map = new float[width*height];
+float* DepthMap::bloomDepths(const float* old, 
+                             const float r) {
+  float* dilated = new float[width*height];
 
   // Default depth is set to 12.0784m
-  memset((uint8_t*)d->map, 65, sizeof(float)*width*height);
+  memset((uint8_t*)dilated, 65, sizeof(float)*width*height);
 
   const float rFocalLength = focalLength * r;
 
@@ -65,12 +80,12 @@ DepthMap* DepthMap::bloomDepths(const float focalLength, const float r) {
         if(right + x >= width) right = width - 1 - x;
 
         for(int cx = left, colOffset = left+x; cx < right; cx++, colOffset++) {
-          float* const dOld = &d->map[rowOffset + colOffset];
+          float* const dOld = &dilated[rowOffset + colOffset];
           if(dist < *dOld) *dOld = dist;
         }
       }
     }
   }
 
-  return d;
+  return dilated;
 }

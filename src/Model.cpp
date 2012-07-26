@@ -1,6 +1,7 @@
 #include "Model.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <map>
 #include <queue>
 #include <algorithm>
@@ -100,7 +101,8 @@ void makeSpheres(ModelTree *t) {
   for(ModelTree::child_iterator it = t->begin(); it!=t->end(); it++) {
     btVector3 loc = (*it)->curr->trans(btVector3(0.0,0.0,0.0));
     btVector3 step = (loc/loc.length())*spacing;
-    for(btVector3 sphere; sphere.length() < loc.length(); sphere+=step) {
+    btVector3 sphere = step;
+    for(; sphere.length() < loc.length(); sphere+=step) {
       t->curr->points.push_back(sphere);
     }
     makeSpheres(*it);
@@ -109,15 +111,16 @@ void makeSpheres(ModelTree *t) {
 
 ModelTree* initPR2() {
 #ifdef DAE
-  return readDump("UrdfDumper/etc/newpr2.txt");
+  ModelTree* t = readDump("UrdfDumper/etc/newpr2.txt");
 #else
-  return readDump("UrdfDumper/etc/pr2.txt");
+  ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
 #endif
+  makeSpheres(t);
+  return t;
 }
 
 const ModelTree& pr2() {
   static ModelTree* t = initPR2();
-  makeSpheres(t);
   return *t;
 }
 
@@ -191,6 +194,13 @@ struct SphereCompare {
 void painterSort(const ModelTree& root, 
                  const btTransform& camera, 
                  vector<CameraSphere>& v) {
+  transformSpheres(root, camera, v);
+  sort(v.begin(), v.end(), sphereCmp);
+}
+
+void transformSpheres(const ModelTree& root, 
+                      const btTransform& camera, 
+                      vector<CameraSphere>& v) {
   btVector3 origin(0,0,0);
   queue<pair<ModelTree*, btTransform> > q;
 
@@ -199,18 +209,21 @@ void painterSort(const ModelTree& root,
       it++) {
     q.push(make_pair(*it, root.curr->trans));
   }
-  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius));
+  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius, 
+                           root.curr->name));
   while(!q.empty()) {
     ModelTree* m = q.front().first;
     btTransform t = q.front().second * m->curr->trans;
     q.pop();
-    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius));
-    for(int i = 0; i < m->curr->points.size(); i++)
+    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius, m->curr->name));
+    for(int i = 0; i < m->curr->points.size(); i++) {
+      stringstream n;
+      n << m->curr->name << "__" << i;
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius));
-
+                               m->curr->radius,
+                               n.str()));
+    }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
   }
-  sort(v.begin(), v.end(), sphereCmp);
 }

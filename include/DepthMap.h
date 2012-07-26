@@ -1,6 +1,7 @@
 #ifndef DEPTHMAP_H
 #define DEPTHMAP_H
 #include <btBulletDynamicsCommon.h>
+#include <map>
 /* #include <stdlib.h> */
 /* #include <unistd.h> */
 /* #include <iostream> */
@@ -10,30 +11,43 @@
  * idea of using floats because it will be easier to use as part of
 # * OpenGL's floating point texture format. */
 class DepthMap{
+private:
+  // We maintain a dictionary of depth maps indexed by a 3D dilation
+  // radius. A radius of zero corresponds to the raw depth map.
+  std::map<float, float*> dilatedMaps;
+  typedef std::map<float,float*>::const_iterator map_it;
+  void setRawMap(float*);
+  float* bloomDepths(const float* map, const float r);
+
 public:
-  int width, height;
-  float * map;
+  int width, height, focalLength;
+
   /* Specifies the camera transformation. */
   btTransform trans;
   DepthMap() 
-    : width(0), height(0), map(NULL), trans(btTransform::getIdentity()) {};
-  DepthMap(int x, int y, float * m, btTransform t)
-    : width(x), height(y), map(m), trans(t) {};
+    : dilatedMaps(std::map<float,float*>()), width(0), height(0), 
+      trans(btTransform::getIdentity()) {};
+  /* DepthMap(int x, int y, float * m, btTransform t) */
+  /*   : width(x), height(y), map(m), trans(t) {}; */
   DepthMap(const DepthMap &d)
-    : width(d.width), height(d.height), map(d.map), trans(d.trans) {};
+    : dilatedMaps(d.dilatedMaps), width(d.width), height(d.height), 
+      trans(d.trans) {};
 
   // Returns true if there is a collision; false otherwise.
   
-  inline bool collides(int x, int y, float sphereDepth) const {
-    if(*(map+(y*width)+x) >sphereDepth)
-      return true;
-    else return false;
+  inline bool collides(const float* map, int x, int y, float sphereDepth) const {
+    return *(map+(y*width)+x) >sphereDepth;
   }
 
-  void makeSimpleMap();
-  void getKinectMapFromFile(const char * filename);
-  DepthMap* bloomDepths(const float focalLength, const float r);
-
+  void makeSimpleMap(const float focalLength);
+  void getKinectMapFromFile(const float focalLength, const char * filename);
+  void addDilation(const float r);
+  inline const float* getMap(const float r) const { 
+    map_it it = dilatedMaps.find(r);
+    if(it == dilatedMaps.end()) return NULL;
+    else return (*it).second;
+  }
+  inline const float* getRawMap() { return getMap(0.0f); }
 };
 
 #endif
