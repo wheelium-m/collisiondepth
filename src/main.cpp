@@ -16,7 +16,7 @@ void go(Renderer& renderer) {
   btTransform cam(btQuaternion::getIdentity(), btVector3(0,0,3));
 
   // Z-axis in new coordinate frame.
-  btVector3 spinAxis = btTransform(cam.getRotation())(btVector3(0,0,1));
+  // btVector3 spinAxis = btTransform(cam.getRotation())(btVector3(0,0,1));
 
   // Rotate the camera about the Z-axis by 2 degrees-per-frame
   while(renderer.loop(cam)) {

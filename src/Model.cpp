@@ -4,7 +4,6 @@
 #include <map>
 #include <queue>
 #include <algorithm>
-//#include "StlFile.h"
 
 using namespace std;
 
@@ -39,6 +38,10 @@ btVector3 readVector(std::istream& s) {
 ModelTree* readDump(const char* fileName) {
   ifstream f(fileName, ios_base::in);
   int n;
+  if(!f.is_open()) {
+    cout << "Couldn't open model file: " << fileName << endl;
+    exit(-1);
+  }
   f >> dec >> n;
   f.ignore(256, '\n');
 
@@ -55,7 +58,11 @@ ModelTree* readDump(const char* fileName) {
     string name;
     getline(f,name,'\n');
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
+#ifdef DAE
     joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
+#else
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1f));
+#endif
   }
 
   // Read in robot model graph arcs
@@ -101,7 +108,11 @@ void makeSpheres(ModelTree *t) {
 }
 
 ModelTree* initPR2() {
+#ifdef DAE
   return readDump("UrdfDumper/etc/newpr2.txt");
+#else
+  return readDump("UrdfDumper/etc/pr2.txt");
+#endif
 }
 
 const ModelTree& pr2() {

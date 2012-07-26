@@ -21,7 +21,9 @@ class Joint{
   Joint(const Joint& orig)
     : name(orig.name), trans(orig.trans), axis(orig.axis),
     points(orig.points), radius(orig.radius), mesh(orig.mesh) {}
-  
+  Joint(std::string n, btTransform t, std::vector<btVector3> pts, 
+        btVector3 a, float r)
+    : name(n), trans(t), axis(a), points(pts), radius(r) {};
   Joint(std::string n, btTransform t, std::vector<btVector3> pts, 
         btVector3 a, float r, const char * filename)
     : name(n), trans(t), axis(a), points(pts), radius(r),mesh(StlFile(filename)) {};

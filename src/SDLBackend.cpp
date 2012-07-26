@@ -201,7 +201,11 @@ void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals,
 /* Open a window, initialize a framerate manager, and clear the back
  * buffer. */
 bool SDLBackend::init(int width, int height) {
-  if(SDL_Init(SDL_INIT_EVERYTHING) < 0) return false;
+  if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    char* msg = SDL_GetError();
+    cout << "SDL_Init error: " << msg << endl;
+    return false;
+  }
   SDL_WM_SetCaption("Collision Depth", "Collision");
   //SDL_initFramerate(m_fps);
   //SDL_setFramerate(m_fps, 100);

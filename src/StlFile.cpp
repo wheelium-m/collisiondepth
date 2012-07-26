@@ -4,7 +4,9 @@
 #include <string.h>
 #include "StlFile.h"
 #include <string>
+#ifdef DAE
 #include <tinyxml.h>
+#endif
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -20,9 +22,10 @@ StlFile::StlFile(const char * filename){
 }
 
 StlFile::StlFile(const StlFile & stl){
-  header = malloc(80);
-  if(!stl.header==NULL)
+  if(stl.header) {
+    header = malloc(80);
     memcpy(header, stl.header, (size_t)80);
+  }
   else 
     header=NULL;
   numTriangles = stl.numTriangles;
@@ -87,7 +90,7 @@ void StlFile::StlReadFile(const char * filename){
     StlReadBinaryFile(filename);
 
 }
-
+#ifdef DAE
 void StlFile::DaeReadFile(const char * filename){
   
   TiXmlDocument doc(filename);
@@ -186,6 +189,11 @@ void StlFile::DaeReadFile(const char * filename){
   }
   numTriangles=this->triangles.size();
 }
+#else
+void StlFile::DaeReadFile(const char * filename) {
+  cout << filename << " not loaded. Project not built with DAE support." << endl;
+}
+#endif
 
 void StlFile::StlReadBinaryFile(const char * filename){
   ifstream file(filename, ios::binary);
