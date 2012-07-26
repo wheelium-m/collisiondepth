@@ -207,7 +207,7 @@ void painterSort(const ModelTree& root,
     v.push_back(CameraSphere(camera(t(origin)), m->curr->radius));
     for(int i = 0; i < m->curr->points.size(); i++)
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius / 3.0));
+                               m->curr->radius));
 
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
       q.push(make_pair(*it, t));
