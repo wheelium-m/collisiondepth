@@ -348,6 +348,14 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
     checker->getCollisionInfo(camera, SPHERE_RADIUS, posture, collisionInfo);
   }
   gettimeofday(&stop, NULL);
+  /*
+  for(map<string,bool>::const_iterator it = collisionInfo.begin();
+      it != collisionInfo.end();
+      it++) {
+    cout << it->first << " => " << it->second << endl;
+  }
+  */
+
   float seconds = (stop.tv_sec - start.tv_sec) + \
                   0.000001f * (float)(stop.tv_usec - start.tv_usec);
   seconds /= 100.0f;
