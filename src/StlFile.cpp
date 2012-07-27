@@ -13,28 +13,29 @@
 
 //using namespace std;
 
-StlFile::StlFile(){
+StlFile::StlFile() : header(NULL) {
   ReadFile((const char *)NULL);
 }
 
-StlFile::StlFile(const char * filename){
+StlFile::StlFile(const char * filename) : header(NULL) {
   ReadFile(filename);
 }
 
-StlFile::StlFile(const StlFile & stl){
-  if(stl.header) {
+StlFile::StlFile(const StlFile* stl) : header(NULL), numTriangles(0) {
+  if(!stl) return;
+  if(stl->header) {
     header = malloc(80);
-    memcpy(header, stl.header, (size_t)80);
+    memcpy(header, stl->header, (size_t)80);
   }
-  else 
-    header=NULL;
-  numTriangles = stl.numTriangles;
-  normals = *(new vector<Point>());
-  triangles = *(new vector<Triangle>());
+  numTriangles = stl->numTriangles;
   for(int i = 0; i < numTriangles; i++){
-    normals.push_back(stl.normals[i]);
-    triangles.push_back(stl.triangles[i]);
+    normals.push_back(stl->normals[i]);
+    triangles.push_back(stl->triangles[i]);
   }
+}
+
+StlFile::~StlFile() {
+  if(header) free(header);
 }
 
 /* Any file you pass, local or absolute, .dae or .stl will be turned
@@ -42,11 +43,9 @@ StlFile::StlFile(const StlFile & stl){
  * TODO: reconcile STL and DAE normal formats.
  */
 void StlFile::ReadFile(const char * filename){
-  
+  if(header) free(header);
   header = malloc(80);
   numTriangles =0;
-  normals = *(new std::vector<Point>());
-  triangles = *(new std::vector<Triangle>());
   if(filename==NULL||strcmp(filename, "")==0)
     return;
   const char * extension = (filename+strlen(filename)-4);

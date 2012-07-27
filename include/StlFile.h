@@ -33,7 +33,8 @@ class StlFile {
   
   StlFile();
   StlFile(const char * filename);
-  StlFile(const StlFile & stl);
+  StlFile(const StlFile * stl);
+  ~StlFile();
   void ReadFile(const char *filename);
   void StlReadFile(const char *filename);
   void DaeReadFile(const char *filename);
