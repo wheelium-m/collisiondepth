@@ -8,6 +8,7 @@ class CollisionChecker {
 private:
   std::vector<const ModelTree*> models;
   std::vector<const DepthMap*> depthMaps;
+  std::map<const string, const Joint*> jointHash;
 public:
   CollisionChecker(const ModelTree*);
   void addDepthMap(const DepthMap*);
@@ -18,5 +19,9 @@ public:
                         const float sphereRadius,
                         const std::map<std::string,float>&, 
                         map<std::string,bool>&);
+  void getCollisionInfoReference(const btTransform& camera,
+                                 const float sphereRadius,
+                                 const std::map<std::string,float>&, 
+                                 map<std::string,bool>&);
 };
 #endif
