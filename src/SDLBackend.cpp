@@ -338,16 +338,21 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   // Lift the PR2's left arm by 45 degrees and swing the right arm out.
   posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
   posture["r_shoulder_pan_link"] = -45.0f * PI / 180;
+  
+  vector<float> postureVec;
+  checker->makeJointVector(posture, postureVec);
 
+  vector<bool> collisionVec;
   map<string,bool> collisionInfo;
   
   struct timeval start;
   struct timeval stop;
   gettimeofday(&start, NULL);
   for(int i = 0; i < 100; i++) {
-    checker->getCollisionInfo(camera, SPHERE_RADIUS, posture, collisionInfo);
+    checker->getCollisionInfo(camera, SPHERE_RADIUS, postureVec, collisionVec);
   }
   gettimeofday(&stop, NULL);
+  checker->makeCollisionMap(collisionVec, collisionInfo);
   /*
   for(map<string,bool>::const_iterator it = collisionInfo.begin();
       it != collisionInfo.end();
@@ -385,9 +390,10 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   drawDepthMap(depth, SPHERE_RADIUS);
 
   for(int i = 0; i < spheres.size(); i++) 
-    drawSphere(collisionInfo[spheres[i].jointName], rowIntervals, spheres[i], depth);
+    drawSphere(collisionInfo[spheres[i].jointName], rowIntervals, 
+               spheres[i], depth);
     //drawSphere(rowIntervals, spheres[i], depth);
-
+    
   freePosedModel(root);
 
   drawAxis(camera);

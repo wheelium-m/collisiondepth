@@ -7,19 +7,18 @@ using namespace std;
 
 CollisionChecker::CollisionChecker(const ModelTree* root) {
   this->models.push_back(root);
-  queue<ModelTree*> q;
-  for(ModelTree::child_iterator it = root->begin(); it != root->end(); it++) {
-    q.push(*it);
-  }
-  this->jointHash[root->curr->name] = root->curr;
+  queue<const ModelTree*> q;
+  q.push(root);
+  this->numSpheres = 0;
   while(!q.empty()) {
-    ModelTree* m = q.front();
+    const ModelTree* m = q.front();
     q.pop();
-    this->jointHash[m->curr->name] = m->curr;
+    this->numSpheres += 1 + m->curr->points.size();
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
       q.push(*it);
     }
   }
+  cout << "Model has " << numSpheres << " spheres" << endl;
 }
 
 void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
@@ -35,76 +34,107 @@ void natToStr(const int i, char* s) {
   }
 }
 
+void CollisionChecker::makeJointVector(const map<string,float>& jointAngleMap, 
+                                       vector<float>& jointAngleVec) {
+  queue<const ModelTree*> q;
+  q.push(this->models[0]);
+  jointAngleVec.clear();
+  while(!q.empty()) {
+    const ModelTree* m = q.front();
+    q.pop();
+    map<string,float>::const_iterator angle = jointAngleMap.find(m->curr->name);
+    if(angle == jointAngleMap.end())
+      jointAngleVec.push_back(0);
+    else
+      jointAngleVec.push_back(angle->second);
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
+      q.push(*it);
+    }
+  }
+}
+
+void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
+                                        map<string,bool>& collisionMap) {
+  int sphereIndex = 0;
+  queue<const ModelTree*> q;
+  q.push(this->models[0]);
+  collisionMap.clear();
+  while(!q.empty()) {
+    const ModelTree* m = q.front();
+    q.pop();
+    collisionMap[m->curr->name] = collisionVec[sphereIndex++];
+
+    // ASCII string munging.
+    int offset = m->curr->name.length();
+    char name[offset+4];
+    memcpy(name, m->curr->name.c_str(), m->curr->name.length());
+    name[offset] = '_';
+    name[offset+1] = '_';
+    name[offset+2] = 0;
+    name[offset+3] = 0;
+    
+    for(int i = 0; i < m->curr->points.size(); i++) {
+      //stringstream n;
+      //n << m->curr->name << "__" << i;
+      //collisionMap[n.str()] = collisionVec[sphereIndex++];
+      natToStr(i, &name[offset+2]);
+      collisionMap[name] = collisionVec[sphereIndex++];
+    }
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
+      q.push(*it);
+    }
+  }
+}
+
 void CollisionChecker::getCollisionInfo(const btTransform& camera,
                                         const float sphereRadius,
-                                        const map<string,float>& jointAngles,
-                                        map<string,bool>& info) {
+                                        const vector<float>& jointAngles,
+                                        vector<bool>& info) {
   const btVector3 origin = btVector3(0,0,0);
+  info.clear();
+  info.resize(this->numSpheres, true);
   for(vector<const DepthMap*>::const_iterator dit = depthMaps.begin();
       dit != depthMaps.end();
       dit++) {
     const DepthMap* depth = *dit;
     const float* dmap = depth->getMap(sphereRadius);
-    const btVector3 imageScale = btVector3(depth->focalLength, depth->focalLength, 1);
-    const btVector3 imageCenter = btVector3(depth->width / 2, depth->height / 2, 0);
+    const btVector3 imageScale = btVector3(depth->focalLength, 
+                                           depth->focalLength, 1);
+    const btVector3 imageCenter = btVector3(depth->width / 2, 
+                                            depth->height / 2, 0);
     const int w = depth->width;
     const int h = depth->height;
     const btTransform depthTrans = depth->trans.inverse();
 
-    long postureBloom = 0;
-    for(map<string,float>::const_iterator it = jointAngles.begin();
-        it != jointAngles.end();
-        it++) {
-      postureBloom |= (long)this->jointHash[it->first];
-    }
-
     // Pose the model
+    int jointIndex = 0;
+    int sphereIndex = -1;
     queue<pair<const btTransform, const ModelTree*> > q;
     const ModelTree* root = models[0];
     q.push(make_pair(btTransform::getIdentity(), root));
     while(!q.empty()) {
       btTransform t = q.front().first; // parent transform
       const ModelTree* child = q.front().second;
-      const string baseName = child->curr->name;
       q.pop();
-      const long jhash = (long)this->jointHash[baseName];
-      if((jhash & postureBloom) == jhash) {
-        const map<string,float>::const_iterator angle = 
-          jointAngles.find(baseName);
-
-        // Compute the composite joint transform
-        if(angle != jointAngles.end())
-          t = t * btTransform(btQuaternion(child->curr->axis, angle->second), 
-                              child->curr->trans.getOrigin());
-        else 
-          t = t * child->curr->trans;
-      } else {
+      float angle = jointAngles[jointIndex++];
+      if(angle != 0)
+        t = t * btTransform(btQuaternion(child->curr->axis, angle), 
+                            child->curr->trans.getOrigin());
+      else 
         t = t * child->curr->trans;
-      }
     
       // Now check the child joint's spheres
-      const int nameIndexOffset = baseName.length() + 2;
-      char name[nameIndexOffset + 2];
-      memcpy(name, baseName.c_str(), baseName.length());
-      memset(&name[nameIndexOffset-2], 0, 4);
-      char* const nameOffset = &name[nameIndexOffset];
-
       const int sz = child->curr->points.size();
       const btTransform modelToCamera = camera * t;
       btVector3 spherePt = modelToCamera(origin);
       int i = 0;
       while(true) {
+        sphereIndex++;
         btVector3 camSpace = depthTrans(spherePt);
-        if(i == 1) {
-          name[nameIndexOffset - 2] = '_';
-          name[nameIndexOffset - 1] = '_';
-        }
         
         // Can't say anything about a sphere behind the camera
         if(camSpace.z() - sphereRadius < 0) {
           if(i == sz) break;
-          natToStr(i, nameOffset);
-          //sprintf(&name[nameIndexOffset], "%d", i);
           spherePt = modelToCamera(child->curr->points[i]);
           i++;
           continue;
@@ -119,24 +149,17 @@ void CollisionChecker::getCollisionInfo(const btTransform& camera,
         if(screenX < 0 || screenX >= w ||
            screenY < 0 || screenY >= h) {
           if(i == sz) break;
-          natToStr(i, nameOffset);
-          //sprintf(&name[nameIndexOffset], "%d", i);
           spherePt = modelToCamera(child->curr->points[i]);
           i++;
           continue;
         }
-        if(depth->collides(dmap, screenX, screenY, camSpace.z() + sphereRadius)) {
-          // Shouldn't overwrite a "false" in the collision info table
-          if(info.find(name) == info.end())
-            info[name] = true;
-        } else {
-          info[name] = false;
-        }
+        // Make a note if we have have evidence that a sphere is *not*
+        // in collision.
+        if(!depth->collides(dmap, screenX, screenY, camSpace.z() + sphereRadius))
+          info[sphereIndex] = false;
 
         // Iterate through the child spheres
         if(i == sz) break;
-        natToStr(i,nameOffset);
-        //sprintf(&name[nameIndexOffset], "%d", i);
         spherePt = modelToCamera(child->curr->points[i]);
         i++;
       }
@@ -194,12 +217,10 @@ void CollisionChecker::getCollisionInfoReference(const btTransform& camera,
 
 bool CollisionChecker::isColliding(const btTransform& camera,
                                    const float sphereRadius, 
-                                   const map<string,float>& jointAngles) {
-  map<string,bool> collisions;
+                                   const vector<float>& jointAngles) {
+  vector<bool> collisions;
   getCollisionInfo(camera, sphereRadius, jointAngles, collisions);
-  map<string,bool>::const_iterator it = collisions.begin();
-  for(; it != collisions.end(); it++) {
-    if((*it).second) return true;
-  }
+  for(int i = 0; i < collisions.size(); i++)
+    if(collisions[i]) return true;
   return false;
 }
