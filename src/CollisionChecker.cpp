@@ -96,76 +96,72 @@ void CollisionChecker::getCollisionInfo(const btTransform& camera,
   for(vector<const DepthMap*>::const_iterator dit = depthMaps.begin();
       dit != depthMaps.end();
       dit++) {
-    const DepthMap* depth = *dit;
-    const float* dmap = depth->getMap(sphereRadius);
-    const btVector3 imageScale = btVector3(depth->focalLength, 
-                                           depth->focalLength, 1);
-    const btVector3 imageCenter = btVector3(depth->width / 2, 
-                                            depth->height / 2, 0);
+    const DepthMap* const depth = *dit;
+    const float* const dmap = depth->getMap(sphereRadius);
     const int w = depth->width;
     const int h = depth->height;
-    const btTransform depthTrans = depth->trans.inverse();
+    const btTransform depthTrans = depth->transInv;
+    const float focalLength = depth->focalLength;
+    const int halfW = w / 2;
+    const int halfH = h / 2;
 
     // Pose the model
     int jointIndex = 0;
     int sphereIndex = -1;
-    queue<pair<const btTransform, const ModelTree*> > q;
-    const ModelTree* root = models[0];
-    q.push(make_pair(btTransform::getIdentity(), root));
-    while(!q.empty()) {
-      btTransform t = q.front().first; // parent transform
-      const ModelTree* child = q.front().second;
-      q.pop();
-      float angle = jointAngles[jointIndex++];
+
+    // Making the queue static should allow for less resizing on
+    // successive checks.
+    static vector<pair<btTransform, const ModelTree*> > q;
+    q.clear();
+    q.push_back(make_pair(btTransform::getIdentity(), models[0]));
+
+    int qHead = 0;
+    int qRemaining = 1;
+    while(qRemaining) {
+      btTransform t = q[qHead].first;
+      const ModelTree* child = q[qHead].second;
+      qHead++;
+      qRemaining--;
+      const float angle = jointAngles[jointIndex++];
+      const Joint* const j = child->curr;
+      
       if(angle != 0)
-        t = t * btTransform(btQuaternion(child->curr->axis, angle), 
-                            child->curr->trans.getOrigin());
+        t = t * btTransform(btQuaternion(j->axis, angle), j->trans.getOrigin());
       else 
-        t = t * child->curr->trans;
+        t = t * j->trans;
     
       // Now check the child joint's spheres
-      const int sz = child->curr->points.size();
+      const int sz = j->points.size();
       const btTransform modelToCamera = camera * t;
+
       btVector3 spherePt = modelToCamera(origin);
-      int i = 0;
-      while(true) {
+      for(int i = 0;; i++) {
         sphereIndex++;
         btVector3 camSpace = depthTrans(spherePt);
         
         // Can't say anything about a sphere behind the camera
-        if(camSpace.z() - sphereRadius < 0) {
-          if(i == sz) break;
-          spherePt = modelToCamera(child->curr->points[i]);
-          i++;
-          continue;
-        }
+        if(camSpace.z() - sphereRadius >= 0) {
+          const float invZ = focalLength / camSpace.z();
+          const int screenX = (int)(camSpace.x() * invZ) + halfW;
+          const int screenY = (int)(camSpace.y() * invZ) + halfH;
 
-        btVector3 screenSpace = camSpace;
-        if(screenSpace.z() != 0) screenSpace *= 1.0 / screenSpace.z();
-        screenSpace *= imageScale;
-        screenSpace += imageCenter;
-        const int screenX = (int)screenSpace.x();
-        const int screenY = (int)screenSpace.y();
-        if(screenX < 0 || screenX >= w ||
-           screenY < 0 || screenY >= h) {
-          if(i == sz) break;
-          spherePt = modelToCamera(child->curr->points[i]);
-          i++;
-          continue;
+          if(screenX >= 0 && screenX < w &&
+             screenY >= 0 && screenY < h) {
+            // Make a note if we have have evidence that a sphere is *not*
+            // in collision.
+            if(*(dmap+screenY*w+screenX) < camSpace.z() + sphereRadius)
+              info[sphereIndex] = false;
+          }
         }
-        // Make a note if we have have evidence that a sphere is *not*
-        // in collision.
-        if(!depth->collides(dmap, screenX, screenY, camSpace.z() + sphereRadius))
-          info[sphereIndex] = false;
-
         // Iterate through the child spheres
         if(i == sz) break;
-        spherePt = modelToCamera(child->curr->points[i]);
-        i++;
+        spherePt = modelToCamera(j->points[i]);
       }
+
       for(ModelTree::child_iterator it = child->begin(); 
           it != child->end(); it++) {
-        q.push(make_pair(t, *it));
+        q.push_back(make_pair(t, *it));
+        qRemaining++;
       }
     }
   }

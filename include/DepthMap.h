@@ -24,14 +24,15 @@ public:
 
   /* Specifies the camera transformation. */
   btTransform trans;
+  btTransform transInv;
   DepthMap() 
     : dilatedMaps(std::map<float,float*>()), width(0), height(0), 
-      trans(btTransform::getIdentity()) {};
+    trans(btTransform::getIdentity()), transInv(btTransform::getIdentity()) {};
   /* DepthMap(int x, int y, float * m, btTransform t) */
   /*   : width(x), height(y), map(m), trans(t) {}; */
   DepthMap(const DepthMap &d)
     : dilatedMaps(d.dilatedMaps), width(d.width), height(d.height), 
-      trans(d.trans) {};
+    trans(d.trans), transInv(d.transInv) {};
 
   // Returns true if there is a collision; false otherwise.
   

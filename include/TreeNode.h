@@ -8,9 +8,9 @@ class TreeNode {
   std::vector<TreeNode<T>*> children;
 
 public:
-  T* curr;
+  T* const curr;
   void add_child(TreeNode<T>* c) { children.push_back(c); };
-  TreeNode(T* c) : curr(c) { children = std::vector<TreeNode<T>*>(); };
+  TreeNode(T* const c) : curr(c) { children = std::vector<TreeNode<T>*>(); };
   typename std::vector<TreeNode<T>*>::const_iterator begin() const { 
     return children.begin(); 
   }

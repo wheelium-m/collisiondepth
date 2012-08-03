@@ -348,7 +348,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
   struct timeval start;
   struct timeval stop;
   gettimeofday(&start, NULL);
-  for(int i = 0; i < 100; i++) {
+  for(int i = 0; i < 1000; i++) {
     checker->getCollisionInfo(camera, SPHERE_RADIUS, postureVec, collisionVec);
   }
   gettimeofday(&stop, NULL);
@@ -363,8 +363,9 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
 
   float seconds = (stop.tv_sec - start.tv_sec) + \
                   0.000001f * (float)(stop.tv_usec - start.tv_usec);
-  seconds /= 100.0f;
-  cout << "Collision detection took " << seconds*1000.0f << "ms" << endl;
+  seconds /= 1000.0f;
+  cout << "Collision detection took " << seconds*1000.0f << "ms";
+  cout << "(" << 1.0 / seconds << " Hz)" << endl;
   cout << "  with " << collisionInfo.size() << " components" << endl;
 
   ModelTree* root = poseModel(rawRoot, posture);

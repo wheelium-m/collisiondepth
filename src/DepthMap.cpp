@@ -14,7 +14,8 @@ void DepthMap::makeSimpleMap(const float focalLength) {
   width = 640;
   height = 480;
   this->focalLength = focalLength;
-  trans = btTransform::getIdentity();
+  trans.setIdentity();
+  transInv.setIdentity();
     
   float* map = new float[640*480];
   for(int i = 0; i < (640*480); i++){
@@ -33,7 +34,8 @@ void DepthMap::getKinectMapFromFile(const float focalLength, const char * filena
   width = 640;
   height = 480;
   this->focalLength = focalLength;
-  trans = btTransform::getIdentity();
+  trans.setIdentity();
+  transInv.setIdentity();
   float* map = new float[640*480];
   file.read((char *)map, 640*480*4);
   setRawMap(map);
