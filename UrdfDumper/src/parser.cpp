@@ -200,7 +200,7 @@ void daeToStl(char * filename){
   for(int i = 0; i < 80; i++){
     stlfile<<c;
   }
-  stlfile.write((const char *)(&num_triangles), 2);
+  stlfile.write((const char *)(&num_triangles), 4);
   float entry[4][3];
   for(int i = 0; i < triangle_vector.size(); i++){
     
