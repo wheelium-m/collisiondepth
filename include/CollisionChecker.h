@@ -12,6 +12,7 @@ private:
 public:
   CollisionChecker(const ModelTree*);
   void addDepthMap(const DepthMap*);
+  const DepthMap* getDepthMap(int i);
   void makeJointVector(const std::map<std::string,float>&,
                        std::vector<float>&);
   void makeCollisionMap(const std::vector<bool>&,

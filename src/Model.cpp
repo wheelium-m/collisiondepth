@@ -188,7 +188,7 @@ void freePosedModel(ModelTree* m) {
 
 struct SphereCompare {
   bool operator()(CameraSphere a, CameraSphere b) { 
-    return (a.center.z() - a.r) > (b.center.z() - b.r);
+    return (a.center.z() - a.r) < (b.center.z() - b.r);
   }
 } sphereCmp;
 

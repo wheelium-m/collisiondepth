@@ -45,7 +45,7 @@ public:
   void addDilation(const float r);
   inline const float* getMap(const float r) const { 
     map_it it = dilatedMaps.find(r);
-    if(it == dilatedMaps.end()) return NULL;
+    if(it == dilatedMaps.end()) return (*dilatedMaps.begin()).second; //NULL;
     else return (*it).second;
   }
   inline const float* getRawMap() { return getMap(0.0f); }

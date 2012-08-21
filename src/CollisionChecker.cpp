@@ -25,6 +25,10 @@ void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
   this->depthMaps.push_back(depthMap);
 }
 
+const DepthMap* CollisionChecker::getDepthMap(int i) {
+  return this->depthMaps[i];
+}
+
 void natToStr(const int i, char* s) {
   if(i < 10) {
     *s = (char)((int)'0' + i);
@@ -86,7 +90,7 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
   }
 }
 
-void CollisionChecker::getCollisionInfo(const btTransform& camera,
+void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
                                         const float sphereRadius,
                                         const vector<float>& jointAngles,
                                         vector<bool>& info) {
@@ -100,7 +104,7 @@ void CollisionChecker::getCollisionInfo(const btTransform& camera,
     const float* const dmap = depth->getMap(sphereRadius);
     const int w = depth->width;
     const int h = depth->height;
-    const btTransform depthTrans = depth->transInv;
+    const btTransform depthTrans = depth->trans;
     const float focalLength = depth->focalLength;
     const int halfW = w / 2;
     const int halfH = h / 2;
@@ -132,13 +136,14 @@ void CollisionChecker::getCollisionInfo(const btTransform& camera,
     
       // Now check the child joint's spheres
       const int sz = j->points.size();
-      const btTransform modelToCamera = camera * t;
+      const btTransform modelToCamera = robotFrame * t;
 
       btVector3 spherePt = modelToCamera(origin);
       for(int i = 0;; i++) {
         sphereIndex++;
         btVector3 camSpace = depthTrans(spherePt);
-        
+
+        camSpace.setZ(-camSpace.getZ());
         // Can't say anything about a sphere behind the camera
         if(camSpace.z() - sphereRadius >= 0) {
           const float invZ = focalLength / camSpace.z();
@@ -149,7 +154,8 @@ void CollisionChecker::getCollisionInfo(const btTransform& camera,
              screenY >= 0 && screenY < h) {
             // Make a note if we have have evidence that a sphere is *not*
             // in collision.
-            if(*(dmap+screenY*w+screenX) < camSpace.z() + sphereRadius)
+            float observedDepth = *(dmap+screenY*w+screenX);
+            if(observedDepth && observedDepth < camSpace.z() + sphereRadius)
               info[sphereIndex] = false;
           }
         }

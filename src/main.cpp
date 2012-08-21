@@ -6,6 +6,8 @@
 
 using namespace std;
 
+extern btTransform parsePose(const char*);
+
 /* Runs the application loop. */
 void go(Renderer& renderer) {
   if(!renderer.init(640,480)) {
@@ -13,14 +15,26 @@ void go(Renderer& renderer) {
     return;
   }
 
-  btTransform cam(btQuaternion::getIdentity(), btVector3(0,0,3));
+  //btTransform robotFrame(btQuaternion::getIdentity(), btVector3(0,0,3));
 
-  // Z-axis in new coordinate frame.
-  // btVector3 spinAxis = btTransform(cam.getRotation())(btVector3(0,0,1));
+  // This is a candidate starting location for the robot
+  // Quaternion (-0.16029344) (-0.9626429) 3.5844795e-2 0.21526611
+  // V3 12.614223 3.6128845 2.0635848
 
-  // Rotate the camera about the Z-axis by 2 degrees-per-frame
-  while(renderer.loop(cam)) {
-    //cam = btTransform(btQuaternion(spinAxis, btScalar(DEG2RAD(2)))) * cam;
+  // Note that the LAB.pcd data set doesn't extend up exactly
+  // perpendicularly to the XZ plane as we might hope, and has a Y
+  // bias of 2-2.5m. Hence this funny starting location Y coordinate.
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(1,0,0),-3.14159*0.5), 
+                                       btVector3(13.614223,-2.6128845,3.0635848));
+
+  float zVel = 0.1;
+  while(renderer.loop(robotFrame)) {
+    robotFrame.setOrigin(robotFrame.getOrigin() + btVector3(0,0,zVel));
+    if(robotFrame.getOrigin().getZ() > 6) {
+      if(zVel > 0) zVel = -zVel;
+    } else if(robotFrame.getOrigin().getZ() < 1) {
+      if(zVel < 0) zVel = -zVel;
+    }
   }
 }
 

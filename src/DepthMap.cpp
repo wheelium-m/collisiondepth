@@ -38,6 +38,9 @@ void DepthMap::getKinectMapFromFile(const float focalLength, const char * filena
   transInv.setIdentity();
   float* map = new float[640*480];
   file.read((char *)map, 640*480*4);
+  // for(int i = 0; i < 640*480; i++)
+  //   if(map[i] == 0.0f) map[i] = 12.0784;
+  //if(map[i] == 0.0f) map[i] = 3156.33f;
   setRawMap(map);
 }
 
@@ -52,9 +55,13 @@ float* DepthMap::bloomDepths(const float* old,
                              const float r) {
   float* dilated = new float[width*height];
 
-  // Default depth is set to 12.0784m
-  memset((uint8_t*)dilated, 65, sizeof(float)*width*height);
-
+  // Default depth is set to 3156.33m (69)
+  // Default depth is set to 12.0784m (65)
+  // 66 -> 48.5647m
+  // 67 -> 195.263
+  //memset((uint8_t*)dilated, 65, sizeof(float)*width*height);
+  //memset((uint8_t*)dilated, 66, sizeof(float)*width*height);
+  memset((uint8_t*)dilated, 0, sizeof(float)*width*height);
   const float rFocalLength = focalLength * r;
 
   for(int y = 0; y < height; y++) {
@@ -83,11 +90,21 @@ float* DepthMap::bloomDepths(const float* old,
 
         for(int cx = left, colOffset = left+x; cx < right; cx++, colOffset++) {
           float* const dOld = &dilated[rowOffset + colOffset];
-          if(dist < *dOld) *dOld = dist;
+          if(dist < *dOld || *dOld == 0) *dOld = dist;
         }
       }
     }
   }
-
+/*
+  // Finish with a cleanup pass that sets 0-depth points to "infinite"
+  // depth. This is to avoid holes in the depthmap from creating
+  // collisions. FIXME: this is not conservative at all!
+  float *p = dilated;
+  for(int y = 0; y < height; y++) {
+    for(int x = 0; x < width; x++, p++) {
+      if(*p == 0.0f) *p = 10.0f;
+    }
+  }
+*/
   return dilated;
 }

@@ -13,15 +13,31 @@
 using namespace std;
 
 //#define ZOOM 180.0
-#define FOCAL_LENGTH 594.0
+
+// Kinect focal length
+//#define FOCAL_LENGTH 594.0
+
+// When generating depthmaps from PCD files, we use a virtual camera
+// with a focal length of 1.0.
+#define FOCAL_LENGTH 320.0
+
 #define PI 3.1415926535
 #define SPHERE_RADIUS 0.1
+
+extern btTransform parsePose(const char* filename);
 
 SDLBackend::SDLBackend() : m_display(NULL) {
   cout << "SDLBackend constructor" << endl;
   checker = new CollisionChecker(&pr2());
   DepthMap* depth = new DepthMap();
-  depth->getKinectMapFromFile(FOCAL_LENGTH, "depth_texture.bin");
+  //depth->getKinectMapFromFile(FOCAL_LENGTH, "depth_texture.bin");
+  depth->getKinectMapFromFile(FOCAL_LENGTH, "etc/depths1.bin");
+  depth->trans = parsePose("etc/depths1pose.txt");
+  btVector3 vtmp = depth->trans.getOrigin();
+  btQuaternion qtmp = depth->trans.getRotation();
+  depth->trans.setOrigin(btTransform(qtmp) * (-1 * vtmp));
+  depth->trans.setRotation(qtmp.inverse());
+  depth->transInv = depth->trans.inverse();
   depth->addDilation(SPHERE_RADIUS);
   checker->addDepthMap(depth);
 }
@@ -42,7 +58,7 @@ inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
 
 // Perspective projection
 inline btVector3 project(btVector3 v) {
-  if(v.z() != 0) return v * (1.0 / v.z());
+  if(v.z() != 0) return v * (1.0 / -v.z());
   else return v;
 }
 
@@ -143,10 +159,15 @@ void SDLBackend::drawSphere(const bool sphereCollides,
                             const CameraSphere& sphere, DepthMap depth) {
   btVector3 camSpace = sphere.center;
   float r = sphere.r;
-  camSpace = (depth.trans.inverse())(camSpace);
+
+  // The sphere should already be in the camera's coordinate frame at
+  // this point.
+  //camSpace = (depth.trans.inverse())(camSpace);
+
   /* This way, spheres behind the camera will not be drawn. */
-  if(camSpace.z() - r < 0.0) return;
+  if(camSpace.z() + r > 0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
+  camSpace.setZ(-camSpace.getZ());
 
   // FIXME: the screen coordinate system scaling factor hack (FOCAL_LENGTH)
   // appears both here and in cameraToScreen.
@@ -219,7 +240,7 @@ void SDLBackend::drawSphere(vector<list<pair<int,int> > >& rowIntervals,
   
   btVector3 camSpace = sphere.center;
   float r = sphere.r;
-  camSpace = (depth.trans.inverse())(camSpace);
+  //camSpace = (depth.trans.inverse())(camSpace);
   /* This way, spheres behind the camera will not be drawn. */
   if(camSpace.z() - r < 0.0) return;
   btVector3 pt = cameraToScreen(project(camSpace));
@@ -330,7 +351,7 @@ void SDLBackend::render(const btTransform &camera) {
   SDL_Flip(m_display);
 }
 
-void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera) {
+void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &robotFrame) {
   SDL_FillRect(m_display, NULL, 0);
   btVector3 origin(0,0,0);
 
@@ -344,12 +365,44 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
 
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;
+
+  // FIXME: Always drawing over the first depth map
+  btTransform camera;
+  btVector3 vtmp;
+/*
+  // A point starting out straight ahead (the negative Z-axis) is
+  // rotated 90 degrees to lie on the negative X-axis. The rotated
+  // point is then translated along the X-axis to arrive at (-1,0,0);
+  vtmp = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5),
+                     btVector3(1,0,0))(btVector3(0,0,-2));
+  cout << "sanity1 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
+
+  // A point starting out ahead and to the right is rotated by 90
+  // degrees, taking it to left-ahead (-2,0,-1).
+  vtmp = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5),
+                     btVector3(0,0,0))(btVector3(1,0,-2));
+  cout << "sanity2 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
+
+  // Now we want to consider a camera that is moved along the positive
+  // X-axis and rotated about its Y-axis to look to the left. A point
+  // on the negative Z-axis should end up ahead-right.
+  camera = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5));
+  camera.setOrigin(camera(-1 * btVector3(1,0,0)));
+  vtmp = camera(btVector3(0,0,-2));
+  cout << "sanity3 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
+*/
+
+  // The robot is rotated about its X-axis to make it upright, then
+  // translated to our target location.
+
+  camera = checker->getDepthMap(0)->trans;
+  camera = camera * robotFrame;
   
   struct timeval start;
   struct timeval stop;
   gettimeofday(&start, NULL);
   for(int i = 0; i < 1000; i++) {
-    checker->getCollisionInfo(camera, SPHERE_RADIUS, postureVec, collisionVec);
+    checker->getCollisionInfo(robotFrame, SPHERE_RADIUS, postureVec, collisionVec);
   }
   gettimeofday(&stop, NULL);
   checker->makeCollisionMap(collisionVec, collisionInfo);
@@ -372,13 +425,18 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &camera
 
   vector<CameraSphere> spheres;
   painterSort(*root, camera, spheres);
+  cout << "First sphere at " << spheres[0].center.getX() << ", " << spheres[0].center.getY() << ", " << spheres[0].center.getZ() << endl;
 
   vector<list<pair<int,int> > > rowIntervals(m_display->h);
   
   static DepthMap depth;
   if(!depth.getRawMap()){
     cout << "Preparing depth map" << endl;
-    depth.getKinectMapFromFile(FOCAL_LENGTH, "depth_texture.bin");
+    //depth.getKinectMapFromFile(FOCAL_LENGTH, "depth_texture.bin");
+    depth.getKinectMapFromFile(FOCAL_LENGTH, "etc/depths1.bin");
+    depth.trans = parsePose("etc/depths1pose.txt");
+    depth.transInv = depth.trans.inverse();
+
     //depth.makeSimpleMap(FOCAL_LENGTH);
 
     // If we use a uniform sphere size, then we can pass a windowed
@@ -421,7 +479,7 @@ void SDLBackend::drawDepthMap(const DepthMap& depth, const float r){
 
 /* Check UI events, render the current frame, and return true if we
  * should continue looping and false if the user asked to quit. */
-bool SDLBackend::loop(btTransform &camera) {
+bool SDLBackend::loop(btTransform &robotFrame) {
   SDL_Event keyevent;    //The SDL event that we will poll to get events.
   static int moveFigure=0;
   static int moveLeft = 0;
@@ -483,7 +541,9 @@ bool SDLBackend::loop(btTransform &camera) {
 	  btTransform rot(btQuaternion(btVector3(0.0,0.0,1.0), -1.0*PI/2.0), btVector3(0.0,0.0,0.0));
 	  motion=rot(motion);
 	  rot.setRotation(btQuaternion(motion, motion.length()/50.0));
-	  camera=btTransform(btQuaternion::getIdentity(), camera.getOrigin())*(rot*btTransform(camera.getRotation(), btVector3(0.0,0.0,0.0)));
+	  robotFrame = btTransform(btQuaternion::getIdentity(), 
+                                   robotFrame.getOrigin()) *
+                       (rot*btTransform(robotFrame.getRotation(), btVector3(0.0,0.0,0.0)));
 	}
 	//printf("The motions are: %d, %d\n",keyevent.motion.xrel, keyevent.motion.yrel);
 	//keyevent.motion.x, keyevent.motion.y
@@ -506,22 +566,22 @@ bool SDLBackend::loop(btTransform &camera) {
   
   if(moveLeft==1){
     
-    camera.setOrigin(camera.getOrigin()+btVector3(0.01,0.0,0.0));
+    robotFrame.setOrigin(robotFrame.getOrigin()+btVector3(0.01,0.0,0.0));
   }
   
   if(moveRight==1){
-    camera.setOrigin(camera.getOrigin()+btVector3(-0.01,0.0,0.0));
+    robotFrame.setOrigin(robotFrame.getOrigin()+btVector3(-0.01,0.0,0.0));
   }
   
   if(moveIn==1){
-    camera.setOrigin(camera.getOrigin()+btVector3(0.0,0.0,-0.01));
+    robotFrame.setOrigin(robotFrame.getOrigin()+btVector3(0.0,0.0,-0.01));
   }
   
   if(moveOut==1){
-    camera.setOrigin(camera.getOrigin()+btVector3(0.0,0.0,0.01));
+    robotFrame.setOrigin(robotFrame.getOrigin()+btVector3(0.0,0.0,0.01));
   }
   
-  renderModel(pr2(), camera);
+  renderModel(pr2(), robotFrame);
   //SDL_framerateDelay(m_fps);
   return true;
 }
