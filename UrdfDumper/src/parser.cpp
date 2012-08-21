@@ -3,9 +3,32 @@
 #include <string>
 #include <urdf/model.h>
 #include "ros/ros.h"
+#include <vector>
+#include <tinyxml.h>
 
 typedef boost::shared_ptr<const urdf::Joint> MJoint;
 typedef boost::shared_ptr<const urdf::Link> MLink;
+
+struct Vec3 {
+  double x,y,z;
+  Vec3(){};
+  Vec3(double x0, double y0, double z0) :
+    x(x0), y(y0), z(z0) {};
+};
+
+struct Triangle {
+  Vec3 pts[3];
+  Triangle(Vec3 a, Vec3 b, Vec3 c){
+    pts[0]=a; pts[1]=b; pts[2]=c;
+  }
+};
+
+void checkNotNull(void * ptr, char * name){
+  if(!ptr){
+    std::cout<<"The pointer "<<name<<" is null."<<std::endl;
+    exit(0);
+  }
+}
 
 void indent(std::ostream& s, int level) {
   while(level-- > 0) s << " ";
@@ -52,6 +75,160 @@ void walkLink(int level, MJoint joint, MLink link) {
   }
 }
 
+void daeToStl(char * filename){
+  TiXmlDocument doc(filename);
+  filename[strlen(filename)-3] = 's';
+  filename[strlen(filename)-2] = 't';
+  filename[strlen(filename)-1] = 'l';
+  std::ofstream stlfile((const char *)filename, std::ios::binary|std::ios::trunc);
+  doc.LoadFile();
+  
+  TiXmlElement * lgeo=doc.RootElement()->FirstChildElement("library_geometries");
+  
+  
+  checkNotNull((void *)lgeo, "lgeo");
+  TiXmlElement * geo=lgeo->FirstChildElement("geometry");
+  checkNotNull((void *)geo, "geo");
+  TiXmlElement * mesh=geo->FirstChildElement("mesh");
+  checkNotNull((void *)mesh, "mesh");
+  TiXmlElement * xml_vertices=mesh->FirstChildElement("vertices");
+  checkNotNull((void *)xml_vertices, "xml_vertices");
+  TiXmlElement * input = xml_vertices->FirstChildElement("input");
+  checkNotNull((void *)input, "input");
+
+  const char * position_name=0;
+  const char * position_char_data=0;
+  const char * p_char_data;
+
+  std::vector<int> p_vector;
+  std::vector<double> position_char_vector;
+  std::vector<Vec3> vec3_vector;
+  std::vector<Triangle> triangle_vector;
+  std::vector<int> indexes;
+
+
+  
+  while(!position_name){
+    if(strcmp(input->Attribute("semantic"), "POSITION")==0){
+      position_name = input->Attribute("source");
+    }
+    input=input->NextSiblingElement("input");
+    checkNotNull(input, "'input in loop'");
+  }
+ 
+  position_name+=1;
+  std::cout<<"The position name is "<<position_name<<std::endl;
+  TiXmlElement * source=mesh->FirstChildElement("source");
+  
+  checkNotNull((void *)source, "source pointer");
+ 
+  while(!position_char_data){
+    if(strcmp(source->Attribute("id"), position_name)==0){
+      position_char_data=source->FirstChildElement("float_array")->GetText();
+      break;
+    }
+    source=source->NextSiblingElement("source");
+    checkNotNull((void *)source, "source ptr in loop");
+  }
+  
+  std::cout<<"Got the position_char_data"<<std::endl;
+
+  TiXmlElement * triangles = mesh->FirstChildElement("triangles");
+  checkNotNull((void *)triangles, "triangles");
+  TiXmlElement * p = triangles->FirstChildElement("p");
+  checkNotNull((void *)p, "p");
+  TiXmlElement * t_input = triangles->FirstChildElement("input");
+  checkNotNull((void *)t_input, "t_input");
+
+  int num_inputs=0;
+  int offset=0;
+  int num_triangles=0;
+  source->FirstChildElement("float_array")->QueryIntAttribute("count", &num_triangles);
+  num_triangles/=3;
+    
+  while(t_input){
+    num_inputs++;
+    if(strcmp(t_input->Attribute("semantic"), "VERTEX")==0){
+      offset=num_inputs-1;
+    }
+    t_input=t_input->NextSiblingElement("input");
+  }
+  
+  std::cout<<"num_triangles: "<<num_triangles<<std::endl;
+  std::cout<<"offset: "<<offset<<std::endl;
+  std::cout<<"num_inputs: "<<num_inputs<<std::endl;
+
+
+  p_char_data=p->GetText();
+  
+  std::istringstream pos(position_char_data);
+  std::istringstream pd(p_char_data);
+
+  std::copy(std::istream_iterator<double>(pos),
+	    std::istream_iterator<double>(),
+	    std::back_inserter<std::vector<double> >(position_char_vector));
+
+  std::copy(std::istream_iterator<int>(pd),
+	    std::istream_iterator<int>(),
+	    std::back_inserter<std::vector<int> >(p_vector));
+  
+  for(int i = 0; i < position_char_vector.size()/3; i++){
+    vec3_vector.push_back(Vec3(position_char_vector[3*i],position_char_vector[3*i+1],position_char_vector[3*i+2]));
+  }
+  
+  for(int i = 0; i < p_vector.size()/num_inputs; i++){
+    indexes.push_back(p_vector[num_inputs*i + offset]);
+  }
+
+  int count = 0;
+  for(int i = 0; i < num_triangles;i++){
+    triangle_vector.push_back(Triangle(vec3_vector[indexes[count]], vec3_vector[indexes[count+1]], vec3_vector[indexes[count+2]]));
+    count+=3;
+  }
+  /*
+  for(int i = 0; i < triangle_vector.size(); i++){
+    std::cout<<"----Triangle "<<i<<"----"<<std::endl;
+    std::cout<<triangle_vector[i].pts[0].x<<" "<<triangle_vector[i].pts[0].y<<" "<<triangle_vector[i].pts[0].z<<std::endl;
+    std::cout<<triangle_vector[i].pts[1].x<<" "<<triangle_vector[i].pts[1].y<<" "<<triangle_vector[i].pts[1].z<<std::endl;
+    std::cout<<triangle_vector[i].pts[2].x<<" "<<triangle_vector[i].pts[2].y<<" "<<triangle_vector[i].pts[2].z<<std::endl;
+    std::cout<<"-------------------"<<std::endl;
+  }
+  exit(0);*/
+  char c = (char)0x00;
+
+  /*Write the header*/
+  for(int i = 0; i < 80; i++){
+    stlfile<<c;
+  }
+  stlfile.write((const char *)(&num_triangles), 2);
+  float entry[4][3];
+  for(int i = 0; i < triangle_vector.size(); i++){
+    
+    /*make a float array of the normal vector and vertices*/
+    
+    for(int j = 0; j < 3;j++)
+      entry[0][j]=0.0;
+    for(int j = 1; j < 4;j++)
+      entry[j][0]=(float)triangle_vector[i].pts[j-1].x;
+    for(int j = 1; j < 4;j++)
+      entry[j][1]=(float)triangle_vector[i].pts[j-1].y;
+    for(int j = 1; j < 4;j++)
+      entry[j][2]=(float)triangle_vector[i].pts[j-1].z;
+    
+  
+  /* write the vertices to the file*/
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < 3;j++){
+      stlfile.write((const char *)&(entry[i][j]), 4);
+    }
+  }
+
+  /* 16 bit terminator*/
+  stlfile.write((const char *)&c, 1);
+  stlfile.write((const char *)&c, 1);
+  }
+}
+
 int dumpModel(std::ostream& s, int parent, int index, MJoint joint, MLink link,
               std::vector<std::pair<int,int> >& arcs) {
   s << link->name << ": ";
@@ -68,12 +245,44 @@ int dumpModel(std::ostream& s, int parent, int index, MJoint joint, MLink link,
   
   if(link->visual!=0&&link->visual->geometry!=0){
     boost::shared_ptr<urdf::Mesh> pt =boost::dynamic_pointer_cast<urdf::Mesh>(link->visual->geometry);
-    if(pt!=0)
-      s << pt->filename;
+    if(pt!=0){
+      //s << pt->filename;
+
+      const char * name = pt->filename.c_str();
+      const char * extension = (name+strlen(name)-4);
+      const char * pathless_name;
+      for(pathless_name=extension;*pathless_name!='/'&&pathless_name!=name;pathless_name--){}
+      
+      
+      if(*pathless_name=='/')
+	pathless_name++;
+      
+      char * pathed_name= (char *)malloc(strlen(pathless_name)+strlen("../../meshes/")+1);
+      strcpy(pathed_name, "../../meshes/");
+      strcat(pathed_name, pathless_name);
+
+      if(strcmp(extension, ".stl")==0||strcmp(extension, ".STL")==0){
+	pathed_name=pathed_name+6;
+	s<<" "<<pathed_name;
+	
+      }
+      else if(strcmp(extension, ".dae")==0||strcmp(extension, ".DAE")==0){
+	daeToStl(pathed_name);
+	pathed_name=pathed_name+6;
+	s<<" "<<pathed_name;
+	
+      }
+      else {
+	std::cout<<"file extension not recognized: -"<<extension<<"-"<<std::endl;
+	exit(0);
+      }
+    }
+    else s<<"";
   }
   else
     s<<"";
   s << std::endl;
+  
   if(parent > -1) arcs.push_back(std::pair<int,int>(parent,index));
   int n = index + 1;
   for(size_t i = 0; i < link->child_links.size(); i++) {
@@ -82,13 +291,13 @@ int dumpModel(std::ostream& s, int parent, int index, MJoint joint, MLink link,
   return (n - index);
 }
 
+
+
+
+
 // A simple 3D vector structure to demonstrate dump file parsing
 // independence from the ROS URDF libraries.
-struct Vec3 { 
-  double x,y,z;
-  Vec3(double x0, double y0, double z0) : 
-    x(x0), y(y0), z(z0) {};
-};
+
 
 Vec3 readVector(std::istream& s) {
   double x, y, z;
