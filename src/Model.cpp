@@ -59,11 +59,13 @@ ModelTree* readDump(const char* fileName) {
     string name;
     getline(f,name,'\n');
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
-#ifdef DAE
+    
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
+    /*#ifdef DAE
     joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
 #else
     joints.push_back(Joint(s, t, originPoint, axis, 0.1f));
-#endif
+    #endif*/
   }
 
   // Read in robot model graph arcs
@@ -113,7 +115,7 @@ ModelTree* initPR2() {
 #ifdef DAE
   ModelTree* t = readDump("UrdfDumper/etc/newpr2.txt");
 #else
-  ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
+  ModelTree* t = readDump("UrdfDumper/etc/something.txt");
 #endif
   makeSpheres(t);
   return t;
@@ -209,18 +211,21 @@ void transformSpheres(const ModelTree& root,
       it++) {
     q.push(make_pair(*it, root.curr->trans));
   }
-  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius, 
+  /* radius changed here by a factor of 5 */
+  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius/5.0, 
                            root.curr->name));
   while(!q.empty()) {
     ModelTree* m = q.front().first;
     btTransform t = q.front().second * m->curr->trans;
     q.pop();
-    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius, m->curr->name));
+    /* radius changed here by a factor of 5 */
+    v.push_back(CameraSphere(camera(t(origin)), m->curr->radius/5.0, m->curr->name));
     for(int i = 0; i < m->curr->points.size(); i++) {
       stringstream n;
       n << m->curr->name << "__" << i;
+      /* radius changed here by a factor of 5 */
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius,
+                               m->curr->radius/5.0,
                                n.str()));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
