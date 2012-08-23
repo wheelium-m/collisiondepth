@@ -27,7 +27,7 @@ void go(Renderer& renderer) {
   btTransform robotFrame = btTransform(btQuaternion(btVector3(1,0,0),-3.14159*0.5), 
                                        btVector3(13.614223,-2.6128845,3.0635848));
 
-  float zVel = 0.1;
+  float zVel = 0.05;
   while(renderer.loop(robotFrame)) {
     robotFrame.setOrigin(robotFrame.getOrigin() + btVector3(0,0,zVel));
     if(robotFrame.getOrigin().getZ() > 6) {
