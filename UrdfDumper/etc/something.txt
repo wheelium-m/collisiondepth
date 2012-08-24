@@ -1,0 +1,160 @@
+80
+base_footprint: (0, 0, 0) (0, 0, 0) (0, 0, 0)
+base_link: (0, 0, 0.051) (0, -0, 0) (0, 0, 0) meshes/base.stl
+base_laser_link: (0.275, 0, 0.252) (0, -0, 0) (0, 0, 0)
+bl_caster_rotation_link: (-0.2246, 0.2246, 0.0282) (0, -0, 0) (0, 0, 1) meshes/caster.stl
+bl_caster_l_wheel_link: (0, 0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+bl_caster_r_wheel_link: (0, -0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+br_caster_rotation_link: (-0.2246, -0.2246, 0.0282) (0, -0, 0) (0, 0, 1) meshes/caster.stl
+br_caster_l_wheel_link: (0, 0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+br_caster_r_wheel_link: (0, -0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+fl_caster_rotation_link: (0.2246, 0.2246, 0.0282) (0, -0, 0) (0, 0, 1) meshes/caster.stl
+fl_caster_l_wheel_link: (0, 0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+fl_caster_r_wheel_link: (0, -0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+fr_caster_rotation_link: (0.2246, -0.2246, 0.0282) (0, -0, 0) (0, 0, 1) meshes/caster.stl
+fr_caster_l_wheel_link: (0, 0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+fr_caster_r_wheel_link: (0, -0.049, 0) (0, -0, 0) (0, 1, 0) meshes/wheel.stl
+torso_lift_link: (-0.05, 0, 0.739675) (0, -0, 0) (0, 0, 1) meshes/torso_lift.stl
+head_pan_link: (-0.01707, 0, 0.38145) (0, -0, 0) (0, 0, 1) meshes/head_pan.stl
+head_tilt_link: (0.068, 0, 0) (0, -0, 0) (0, 1, 0) meshes/head_tilt.stl
+head_plate_frame: (0.0232, 0, 0.0645) (0, -0, 0) (0, 0, 0)
+projector_wg6802418_frame: (0, 0.109, 0.035) (0, -0, 0) (0, 0, 0)
+projector_wg6802418_child_frame: (0, 0, 0) (0, -1.5708, 0) (0, 0, 0)
+sensor_mount_link: (0, 0, 0) (0, -0, 0) (0, 0, 0)
+double_stereo_link: (0, 0, 0.003) (0, -0, 0) (0, 0, 0)
+narrow_stereo_link: (0, 0.06, 0.0305) (0, -0, 0) (0, 0, 0)
+narrow_stereo_gazebo_l_stereo_camera_frame: (0, 0, 0) (0, -0, 0) (0, 0, 0)
+narrow_stereo_gazebo_l_stereo_camera_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+narrow_stereo_gazebo_r_stereo_camera_frame: (0, -0.09, 0) (0, -0, 0) (0, 0, 0)
+narrow_stereo_gazebo_r_stereo_camera_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+narrow_stereo_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+wide_stereo_link: (0, 0.03, 0.0305) (0, -0, 0) (0, 0, 0)
+wide_stereo_gazebo_l_stereo_camera_frame: (0, 0, 0) (0, -0, 0) (0, 0, 0)
+wide_stereo_gazebo_l_stereo_camera_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+wide_stereo_gazebo_r_stereo_camera_frame: (0, -0.09, 0) (0, -0, 0) (0, 0, 0)
+wide_stereo_gazebo_r_stereo_camera_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+wide_stereo_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+high_def_frame: (0, -0.109, 0.035) (0, -0, 0) (0, 0, 0)
+high_def_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+imu_link: (-0.02977, -0.1497, 0.164) (3.14159, -2.06823e-13, 3.14159) (0, 0, 0)
+l_shoulder_pan_link: (0, 0.188, 0) (0, -0, 0) (0, 0, 1) meshes/shoulder_pan.stl
+l_shoulder_lift_link: (0.1, 0, 0) (0, -0, 0) (0, 1, 0) meshes/shoulder_lift.stl
+l_upper_arm_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/upper_arm_roll.stl
+l_upper_arm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/upper_arm.stl
+l_elbow_flex_link: (0.4, 0, 0) (0, -0, 0) (0, 1, 0) meshes/elbow_flex.stl
+l_forearm_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/forearm_roll.stl
+l_forearm_cam_frame: (0.135, 0, 0.044) (-1.5708, -0.562869, 0) (0, 0, 0)
+l_forearm_cam_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+l_forearm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/forearm.stl
+l_wrist_flex_link: (0.321, 0, 0) (0, -0, 0) (0, 1, 0) meshes/wrist_flex.stl
+l_wrist_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/wrist_roll.stl
+l_gripper_palm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/gripper_palm.stl
+l_gripper_l_finger_link: (0.07691, 0.01, 0) (0, -0, 0) (0, 0, 1) meshes/l_finger.stl
+l_gripper_l_finger_tip_link: (0.09137, 0.00495, 0) (0, -0, 0) (0, 0, -1) meshes/l_finger_tip.stl
+l_gripper_led_frame: (0.0513, 0, 0.0244) (0, -0, 0) (0, 0, 0)
+l_gripper_motor_accelerometer_link: (0, 0, 0) (0, -0, 0) (0, 0, 0)
+l_gripper_r_finger_link: (0.07691, -0.01, 0) (0, -0, 0) (0, 0, -1) meshes/l_finger.stl
+l_gripper_r_finger_tip_link: (0.09137, -0.00495, 0) (0, -0, 0) (0, 0, 1) meshes/l_finger_tip.stl
+l_gripper_l_finger_tip_frame: (0, 0, 0) (0, -0, 0) (0, 1, 0)
+l_gripper_tool_frame: (0.18, 0, 0) (0, -0, 0) (0, 0, 0)
+laser_tilt_mount_link: (0.09893, 0, 0.227) (0, -0, 0) (0, 1, 0) meshes/tilting_hokuyo.stl
+laser_tilt_link: (0, 0, 0.03) (0, -0, 0) (0, 0, 0)
+r_shoulder_pan_link: (0, -0.188, 0) (0, -0, 0) (0, 0, 1) meshes/shoulder_pan.stl
+r_shoulder_lift_link: (0.1, 0, 0) (0, -0, 0) (0, 1, 0) meshes/shoulder_lift.stl
+r_upper_arm_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/upper_arm_roll.stl
+r_upper_arm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/upper_arm.stl
+r_elbow_flex_link: (0.4, 0, 0) (0, -0, 0) (0, 1, 0) meshes/elbow_flex.stl
+r_forearm_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/forearm_roll.stl
+r_forearm_cam_frame: (0.135, 0, 0.044) (1.5708, -0.562869, 0) (0, 0, 0)
+r_forearm_cam_optical_frame: (0, 0, 0) (-1.5708, -5.55112e-17, -1.5708) (0, 0, 0)
+r_forearm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/forearm.stl
+r_wrist_flex_link: (0.321, 0, 0) (0, -0, 0) (0, 1, 0) meshes/wrist_flex.stl
+r_wrist_roll_link: (0, 0, 0) (0, -0, 0) (1, 0, 0) meshes/wrist_roll.stl
+r_gripper_palm_link: (0, 0, 0) (0, -0, 0) (0, 0, 0) meshes/gripper_palm.stl
+r_gripper_l_finger_link: (0.07691, 0.01, 0) (0, -0, 0) (0, 0, 1) meshes/l_finger.stl
+r_gripper_l_finger_tip_link: (0.09137, 0.00495, 0) (0, -0, 0) (0, 0, -1) meshes/l_finger_tip.stl
+r_gripper_led_frame: (0.0513, 0, 0.0244) (0, -0, 0) (0, 0, 0)
+r_gripper_motor_accelerometer_link: (0, 0, 0) (0, -0, 0) (0, 0, 0)
+r_gripper_r_finger_link: (0.07691, -0.01, 0) (0, -0, 0) (0, 0, -1) meshes/l_finger.stl
+r_gripper_r_finger_tip_link: (0.09137, -0.00495, 0) (0, -0, 0) (0, 0, 1) meshes/l_finger_tip.stl
+r_gripper_l_finger_tip_frame: (0, 0, 0) (0, -0, 0) (0, 1, 0)
+r_gripper_tool_frame: (0.18, 0, 0) (0, -0, 0) (0, 0, 0)
+0 -> 1
+1 -> 2
+1 -> 3
+3 -> 4
+3 -> 5
+1 -> 6
+6 -> 7
+6 -> 8
+1 -> 9
+9 -> 10
+9 -> 11
+1 -> 12
+12 -> 13
+12 -> 14
+1 -> 15
+15 -> 16
+16 -> 17
+17 -> 18
+18 -> 19
+19 -> 20
+18 -> 21
+21 -> 22
+22 -> 23
+23 -> 24
+24 -> 25
+24 -> 26
+26 -> 27
+23 -> 28
+22 -> 29
+29 -> 30
+30 -> 31
+30 -> 32
+32 -> 33
+29 -> 34
+21 -> 35
+35 -> 36
+15 -> 37
+15 -> 38
+38 -> 39
+39 -> 40
+40 -> 41
+41 -> 42
+42 -> 43
+43 -> 44
+44 -> 45
+43 -> 46
+46 -> 47
+47 -> 48
+48 -> 49
+49 -> 50
+50 -> 51
+49 -> 52
+49 -> 53
+49 -> 54
+54 -> 55
+55 -> 56
+49 -> 57
+15 -> 58
+58 -> 59
+15 -> 60
+60 -> 61
+61 -> 62
+62 -> 63
+63 -> 64
+64 -> 65
+65 -> 66
+66 -> 67
+65 -> 68
+68 -> 69
+69 -> 70
+70 -> 71
+71 -> 72
+72 -> 73
+71 -> 74
+71 -> 75
+71 -> 76
+76 -> 77
+77 -> 78
+71 -> 79

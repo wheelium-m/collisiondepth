@@ -115,8 +115,8 @@ ModelTree* initPR2() {
 #ifdef DAE
   ModelTree* t = readDump("UrdfDumper/etc/newpr2.txt");
 #else
-  //ModelTree* t = readDump("UrdfDumper/etc/something.txt");
-  ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
+  ModelTree* t = readDump("UrdfDumper/etc/something.txt");
+  //ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
 #endif
   makeSpheres(t);
   return t;
@@ -213,7 +213,7 @@ void transformSpheres(const ModelTree& root,
     q.push(make_pair(*it, root.curr->trans));
   }
   /* radius changed here by a factor of 5 */
-  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius, // /5.0, 
+  v.push_back(CameraSphere(camera(root.curr->trans(origin)), root.curr->radius/5.0, 
                            root.curr->name));
   while(!q.empty()) {
     ModelTree* m = q.front().first;
@@ -221,14 +221,14 @@ void transformSpheres(const ModelTree& root,
     q.pop();
     /* radius changed here by a factor of 5 */
     v.push_back(CameraSphere(camera(t(origin)), 
-                             m->curr->radius, // /5.0, 
+                             m->curr->radius/5.0, 
                              m->curr->name));
     for(int i = 0; i < m->curr->points.size(); i++) {
       stringstream n;
       n << m->curr->name << "__" << i;
       /* radius changed here by a factor of 5 */
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius, // /5.0,
+                               m->curr->radius/5.0/5.0,
                                n.str()));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)

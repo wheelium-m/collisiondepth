@@ -39,8 +39,9 @@ class Joint{
 	btVector3 center = (p1+p2+p3)/3;
 	/* Somewhat fixes scaling issue */
 	center/=10.0;
-	points.push_back(center);
+	points.push_back(center);	
       }
+      removeOverlaps();
       //std::cout<<filename<<endl;
       //std::cout<<"The number of points in this joint is "<<1+points.size()<<" and mesh->numTriangles is "<<mesh->numTriangles<<" and filename is "<<filename<<std::endl;
       }
@@ -48,5 +49,21 @@ class Joint{
   ~Joint() {
     if(mesh) delete mesh;
   }
+ private:
+  void removeOverlaps(){
+    std::vector<btVector3> temp;
+    bool overlap= false;
+    for(int i = 0; i < points.size()-1; i++){
+      for(int j = i+1; j<points.size();j++){
+        if((points[i]-points[j]).length()<0.02)
+	  overlap=true;
+      }
+      if(!overlap){
+	temp.push_back(points[i]);
+      }
+      overlap=false;
+    }
+    points=temp;
+  };
 };
 #endif

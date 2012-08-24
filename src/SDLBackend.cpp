@@ -22,7 +22,7 @@ using namespace std;
 #define FOCAL_LENGTH 320.0
 
 #define PI 3.1415926535
-#define SPHERE_RADIUS 0.1
+#define SPHERE_RADIUS 0.02
 
 extern btTransform parsePose(const char* filename);
 
