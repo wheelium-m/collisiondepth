@@ -70,12 +70,13 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
 
     // ASCII string munging.
     int offset = m->curr->name.length();
-    char name[offset+4];
+    char name[offset+5];
     memcpy(name, m->curr->name.c_str(), m->curr->name.length());
     name[offset] = '_';
     name[offset+1] = '_';
     name[offset+2] = 0;
     name[offset+3] = 0;
+    name[offset+4] = 0;
     
     for(int i = 0; i < m->curr->points.size(); i++) {
       //stringstream n;

@@ -52,16 +52,17 @@ class Joint{
  private:
   void removeOverlaps(){
     std::vector<btVector3> temp;
-    bool overlap= false;
+    bool noOverlap = true;
     for(int i = 0; i < points.size()-1; i++){
-      for(int j = i+1; j<points.size();j++){
-        if((points[i]-points[j]).length()<0.02)
-	  overlap=true;
+      for(int j = i+1; j<points.size() && noOverlap; j++){
+        //if((points[i]-points[j]).length()<0.02)
+        if((points[i]-points[j]).length()<0.08)
+	  noOverlap=false;
       }
-      if(!overlap){
+      if(noOverlap){
 	temp.push_back(points[i]);
       }
-      overlap=false;
+      noOverlap=true;
     }
     points=temp;
   };

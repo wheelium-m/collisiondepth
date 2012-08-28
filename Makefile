@@ -23,10 +23,10 @@ mac: CFLAGS:=$(subst -DDAE,,$(CFLAGS))
 mac:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${MACLIBS} -framework OpenGL -framework GLUT
 
-$(OBJS):	%.o: src/%.cpp
+$(OBJS):	%.o: src/%.cpp $(wildcard include/*.h)
 	${CC} ${CFLAGS} -c $< -o $@
 
-.PHONY:	clean etags
+.PHONY:	clean etags all
 
 etags:
 	find . -name '*.cpp' -or -name '*.h' | xargs etags
