@@ -26,20 +26,20 @@ using namespace std;
 
 extern btTransform parsePose(const char* filename);
 
+void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
+  DepthMap* depth = new DepthMap();
+  depth->getKinectMapFromFile(FOCAL_LENGTH, depthImg);
+  btTransform t = parsePose(imgPose);
+  depth->trans = btTransform(t.getRotation().inverse(), 
+                             btTransform(t.getRotation())(-1 * t.getOrigin()));
+  depth->transInv = depth->trans.inverse();
+  depth->addDilation(SPHERE_RADIUS);
+  this->checker->addDepthMap(depth);
+}
+
 SDLBackend::SDLBackend() : m_display(NULL) {
   cout << "SDLBackend constructor" << endl;
   checker = new CollisionChecker(&pr2());
-  DepthMap* depth = new DepthMap();
-  //depth->getKinectMapFromFile(FOCAL_LENGTH, "depth_texture.bin");
-  depth->getKinectMapFromFile(FOCAL_LENGTH, "etc/depths1.bin");
-  depth->trans = parsePose("etc/depths1pose.txt");
-  btVector3 vtmp = depth->trans.getOrigin();
-  btQuaternion qtmp = depth->trans.getRotation();
-  depth->trans.setOrigin(btTransform(qtmp) * (-1 * vtmp));
-  depth->trans.setRotation(qtmp.inverse());
-  depth->transInv = depth->trans.inverse();
-  depth->addDilation(SPHERE_RADIUS);
-  checker->addDepthMap(depth);
 }
 
 /* Cleanup SDL. */
@@ -156,13 +156,9 @@ bool SDLBackend::checkSphere(const DepthMap& depth,
 
 void SDLBackend::drawSphere(const bool sphereCollides,
                             vector<list<pair<int,int> > >& rowIntervals, 
-                            const CameraSphere& sphere, DepthMap depth) {
+                            const CameraSphere& sphere) {
   btVector3 camSpace = sphere.center;
   float r = sphere.r;
-
-  // The sphere should already be in the camera's coordinate frame at
-  // this point.
-  //camSpace = (depth.trans.inverse())(camSpace);
 
   /* This way, spheres behind the camera will not be drawn. */
   if(camSpace.z() + r > 0.0) return;
@@ -395,7 +391,8 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &robotF
   // The robot is rotated about its X-axis to make it upright, then
   // translated to our target location.
 
-  camera = checker->getDepthMap(0)->trans;
+  int bestView = 1;
+  camera = checker->getDepthMap(bestView)->trans;
   camera = camera * robotFrame;
   
   struct timeval start;
@@ -425,10 +422,9 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &robotF
 
   vector<CameraSphere> spheres;
   painterSort(*root, camera, spheres);
-  cout << "First sphere at " << spheres[0].center.getX() << ", " << spheres[0].center.getY() << ", " << spheres[0].center.getZ() << endl;
-
   vector<list<pair<int,int> > > rowIntervals(m_display->h);
   
+  /*
   static DepthMap depth;
   if(!depth.getRawMap()){
     cout << "Preparing depth map" << endl;
@@ -445,13 +441,14 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &robotF
     // sphere centered at each point represented by a depth map pixel.
     depth.addDilation(SPHERE_RADIUS);
   }
+  */
+  const DepthMap* depth = this->checker->getDepthMap(bestView);
 
   drawDepthMap(depth, SPHERE_RADIUS);
 
   for(int i = 0; i < spheres.size(); i++) 
     drawSphere(collisionInfo[spheres[i].jointName], rowIntervals, 
-               spheres[i], depth);
-    //drawSphere(rowIntervals, spheres[i], depth);
+               spheres[i]);
     
   freePosedModel(root);
 
@@ -459,17 +456,19 @@ void SDLBackend::renderModel(const ModelTree& rawRoot, const btTransform &robotF
   SDL_Flip(m_display);
 }
 
-void SDLBackend::drawDepthMap(const DepthMap& depth, const float r){
+void SDLBackend::drawDepthMap(const DepthMap* depth, const float r){
   float maxval = 0;
   int bpp = m_display->format->BytesPerPixel;
   uint8_t *p;
-  const float* map = depth.getMap(r);
-  for(int i = 0; i < depth.width*depth.height;i++){
+  const float* map = depth->getMap(r);
+
+  for(int i = 0; i < depth->width * depth->height; i++){
     if(*(map+i) > maxval)
       maxval = *(map+i);
   }
+  cout << "Max depth is " << maxval << endl;
   p = (uint8_t*)m_display->pixels;
-  for(int i = 0; i < depth.width*depth.height;i++){
+  for(int i = 0; i < depth->width * depth->height; i++){
     //(p+bpp*i)[1] = 255-(int)((*(depth.map+i)/maxval)*255);
     const uint8_t* col = getColor(min(1.0f, *(map+i) / maxval));
     uint32_t sdlCol = SDL_MapRGB(m_display->format, col[0], col[1], col[2]);

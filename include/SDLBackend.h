@@ -18,6 +18,7 @@ public:
   ~SDLBackend();
   virtual bool init(int width, int height);
   virtual bool loop(btTransform &camera);
+  virtual void addDepthMap(const char* depthImg, const char* imgPose);
 private:
   btVector3 cameraToScreenTranslation;
   SDL_Surface* m_display;
@@ -33,9 +34,9 @@ private:
                    ScanlineIntervals& spans);
   void drawSphere(ScanlineIntervals& spans, const CameraSphere&, DepthMap depth);
   void drawSphere(bool sphereCollides, ScanlineIntervals& spans, 
-                  const CameraSphere&, DepthMap depth);
+                  const CameraSphere&);
   btVector3 cameraToScreen(btVector3 pt);
-  void drawDepthMap(const DepthMap& depth, const float r);
+  void drawDepthMap(const DepthMap* depth, const float r);
 };
 
 #endif

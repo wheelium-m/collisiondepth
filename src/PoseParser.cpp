@@ -34,13 +34,13 @@ btTransform parsePose(const char* filename) {
   tokenize(s, tokens);
   getline(f,s);
   tokenize(s, tokens);
-  if(tokens.size() != 9) {
-    cout << "Didn't find 9 space-separated tokens in a pose file!" << endl;
+  if(tokens.size() != 10) {
+    cout << "Didn't find 10 space-separated tokens in a pose file!" << endl;
     exit(-1);
   }
-  btQuaternion r = btQuaternion(stof(tokens[2]), stof(tokens[3]), 
-                                stof(tokens[4]), stof(tokens[1]));
-  btVector3 t = btVector3(stof(tokens[6]), stof(tokens[7]), stof(tokens[8]));
+  btQuaternion r = btQuaternion(stof(tokens[3]), stof(tokens[4]), 
+                                stof(tokens[5]), stof(tokens[1]));
+  btVector3 t = btVector3(stof(tokens[7]), stof(tokens[8]), stof(tokens[9]));
   return btTransform(r,t);
 }
 

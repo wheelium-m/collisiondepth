@@ -67,7 +67,10 @@ float* DepthMap::bloomDepths(const float* old,
   for(int y = 0; y < height; y++) {
     for(int x = 0; x < width; x++, old++) {
       float dist = *old;
-      if(dist == 0.0f) continue; // Don't splat unknown points
+      //if(dist == 0.0f) continue; // Don't splat unknown points
+      
+      // Don't splat unknown points or those very close to the camera.
+      if(dist < 0.2f) continue; 
 
       // Pixel radius
       const int pr = (int)(rFocalLength / dist);
@@ -76,7 +79,9 @@ float* DepthMap::bloomDepths(const float* old,
       // Splat a projection of a sphere centered at the point of
       // interest onto the new depth map to find a conservative
       // minimum depth.
-      for(int cy = -pr, rowOffset=(y-pr)*width; cy < pr; cy++, rowOffset += width) {
+      for(int cy = -pr, rowOffset=(y-pr)*width; 
+          cy < pr; 
+          cy++, rowOffset += width) {
         if(cy + y >= height) break;
         if(cy + y < 0) continue;
         const int rowBound = (int)sqrt(prsq - cy*cy);
@@ -89,7 +94,7 @@ float* DepthMap::bloomDepths(const float* old,
         if(right + x >= width) right = width - 1 - x;
 
         for(int cx = left, colOffset = left+x; cx < right; cx++, colOffset++) {
-          float* const dOld = &dilated[rowOffset + colOffset];
+          float* const dOld = &(dilated[rowOffset + colOffset]);
           if(dist < *dOld || *dOld == 0) *dOld = dist;
         }
       }
