@@ -111,7 +111,9 @@ void checkMap(const int threadId,
   const int w = depth->width;
   const int h = depth->height;
   const btTransform depthTrans = depth->trans;
-  const float focalLength = depth->focalLength;
+  //const float focalLength = depth->focalLength;
+  const float focalLengthX = 320.0f;
+  const float focalLengthY = 240.0f;
   const int halfW = w / 2;
   const int halfH = h / 2;
 
@@ -153,9 +155,11 @@ void checkMap(const int threadId,
       camSpace.setZ(-camSpace.getZ());
       // Can't say anything about a sphere behind the camera
       if(camSpace.z() - sphereRadius >= 0) {
-        const float invZ = focalLength / camSpace.z();
-        const int screenX = (int)(camSpace.x() * invZ) + halfW;
-        const int screenY = (int)(camSpace.y() * invZ) + halfH;
+        //const float invZ = focalLength / camSpace.z();
+        //const int screenX = (int)(camSpace.x() * invZ) + halfW;
+        //const int screenY = (int)(camSpace.y() * invZ) + halfH;
+        const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
+        const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
 
         if(screenX >= 0 && screenX < w &&
            screenY >= 0 && screenY < h) {

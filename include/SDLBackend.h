@@ -32,10 +32,10 @@ private:
                    const btVector3& screenSpace, 
                    const float r,
                    ScanlineIntervals& spans);
-  void drawSphere(ScanlineIntervals& spans, const CameraSphere&, DepthMap depth);
   void drawSphere(bool sphereCollides, ScanlineIntervals& spans, 
                   const CameraSphere&);
-  btVector3 cameraToScreen(btVector3 pt);
+  //btVector3 cameraToScreen(btVector3 pt);
+  inline btVector3 project(btVector3 pt);
   void drawDepthMap(const DepthMap* depth, const float r);
 };
 

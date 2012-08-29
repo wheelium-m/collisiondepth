@@ -34,12 +34,17 @@ void go(Renderer& renderer) {
   // Note that the LAB.pcd data set doesn't extend up exactly
   // perpendicularly to the XZ plane as we might hope, and has a Y
   // bias of 2-2.5m. Hence this funny starting location Y coordinate.
-  btTransform robotFrame = btTransform(btQuaternion(btVector3(1,0,0),-3.14159*0.5), 
-                                       btVector3(13.614223,-2.6128845,3.0635848));
-  
-  //robotFrame.setOrigin(btVector3(11.6, -1.6, 6.1));
+  btQuaternion rot(btVector3(1,0,0),3.14159*0.5);
+  btVector3 trans(13.614223,4.6128845,3.0635848);
+  btTransform robotFrame = btTransform(rot,trans);
 
-  float zVel = 0.05;
+  //float zVel = 0.05;
+  float zVel = 0.0;
+
+  //robotFrame.setRotation(btQuaternion::getIdentity());
+  // robotFrame.setOrigin(btVector3(robotFrame.getOrigin().x(),
+  //                                robotFrame.getOrigin().y(),
+  //                                6));
   while(renderer.loop(robotFrame)) {
     robotFrame.setOrigin(robotFrame.getOrigin() + btVector3(0,0,zVel));
     if(robotFrame.getOrigin().getZ() > 6) {
