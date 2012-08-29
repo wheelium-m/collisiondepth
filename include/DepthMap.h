@@ -21,6 +21,7 @@ private:
 
 public:
   int width, height, focalLength;
+  int depthID;
 
   /* Specifies the camera transformation. */
   btTransform trans;

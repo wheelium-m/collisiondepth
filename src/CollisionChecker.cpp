@@ -75,7 +75,7 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
-    collisionMap[m->curr->name] = collisionVec[sphereIndex++];
+    collisionMap[m->curr->name] = !collisionVec[sphereIndex++];
 
     // ASCII string munging.
     int offset = m->curr->name.length();
@@ -92,7 +92,7 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
       //n << m->curr->name << "__" << i;
       //collisionMap[n.str()] = collisionVec[sphereIndex++];
       natToStr(i, &name[offset+2]);
-      collisionMap[name] = collisionVec[sphereIndex++];
+      collisionMap[name] = !collisionVec[sphereIndex++];
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
       q.push(*it);
@@ -105,7 +105,7 @@ static vector<vector<pair<btTransform, const ModelTree*> > > perThreadQ(64);
 // Check a posed model against an individual depth map.
 void checkMap(const int threadId,
               const vector<const ModelTree*>& models,
-              vector<bool>* info,
+              vector<bool>* possibleCollision,
               const DepthMap* const depth,
               const btTransform& robotFrame,
               const float sphereRadius,
@@ -159,9 +159,6 @@ void checkMap(const int threadId,
       camSpace.setZ(-camSpace.getZ());
       // Can't say anything about a sphere behind the camera
       if(camSpace.z() - sphereRadius >= 0) {
-        //const float invZ = focalLength / camSpace.z();
-        //const int screenX = (int)(camSpace.x() * invZ) + halfW;
-        //const int screenY = (int)(camSpace.y() * invZ) + halfH;
         const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
         const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
 
@@ -170,8 +167,13 @@ void checkMap(const int threadId,
           // Make a note if we have have evidence that a sphere is *not*
           // in collision.
           float observedDepth = *(dmap+screenY*w+screenX);
-          if(observedDepth && observedDepth < camSpace.z() + sphereRadius)
-            (*info)[sphereIndex] = false;
+
+          // FIXME: This is the test we want to do...
+          //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
+          // But since we want to declare "no information" as a good
+          // thing for testing purposes...
+          if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
+            (*possibleCollision)[sphereIndex] = false;
         }
       }
       // Iterate through the child spheres
@@ -187,12 +189,14 @@ void checkMap(const int threadId,
   }
 }
 
+// The vector possibleCollision will contain "true" for every sphere
+// not confirmed as free of collision after this function is called.
 void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
                                         const float sphereRadius,
                                         const vector<float>& jointAngles,
-                                        vector<bool>& info) {
-  info.clear();
-  info.resize(this->numSpheres, true);
+                                        vector<bool>& possibleCollision) {
+  possibleCollision.clear();
+  possibleCollision.resize(this->numSpheres, true);
 
   // For a single pose, launching threads is worse than doing things
   // serially.
@@ -200,9 +204,30 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
   // thread* t = new thread[depthMaps.size()];
   
   for(int i = 0; i < depthMaps.size(); i++) {
-    checkMap(i, models, &info, depthMaps[i], robotFrame, 
+
+    checkMap(i, models, &possibleCollision, depthMaps[i], robotFrame, 
             sphereRadius, jointAngles);
-    // t[i] = thread(checkMap, i, models, &info, depthMaps[i], 
+
+    // Check if every sphere has been seen free of collision
+    int j;
+    for(j = 0; j < possibleCollision.size(); j++)
+      if(possibleCollision[j]) break;
+    if(j == possibleCollision.size()) {
+      // Shuffle so depth map is checked first next time.
+
+      // This is a rough heuristic that is often pointless (e.g. when
+      // multiple views are needed to confirm collision freedom, the
+      // order is swapped every time), but does capture the optimistic
+      // common case of a single view being sufficient.
+      if(i != 0) {
+        const DepthMap* tmp = depthMaps[0];
+        depthMaps[0] = depthMaps[i];
+        depthMaps[i] = tmp;
+      }
+      break;
+    }
+
+    // t[i] = thread(checkMap, i, models, &possibleCollision, depthMaps[i], 
     //               robotFrame, sphereRadius, jointAngles);
   }
 

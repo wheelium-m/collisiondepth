@@ -32,6 +32,7 @@ extern btTransform parsePose(const char* filename);
 
 void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
   DepthMap* depth = new DepthMap();
+  depth->depthID = this->checker->numDepthMaps();
   depth->getKinectMapFromFile(FOCAL_LENGTH, depthImg);
   btTransform t = parsePose(imgPose);
   depth->trans = btTransform(t.getRotation(), // .inverse(), 
@@ -299,6 +300,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   struct timeval start;
   struct timeval stop;
   gettimeofday(&start, NULL);
+  cout << "First depth map tested is " << checker->getDepthMap(0)->depthID << endl;
   for(int i = 0; i < 1000; i++) {
     checker->getCollisionInfo(robotFrame, SPHERE_RADIUS, postureVec, collisionVec);
   }
