@@ -58,9 +58,14 @@ ModelTree* readDump(const char* fileName) {
     btVector3 axis = readVector(f);
     string name;
     getline(f,name,'\n');
+
+    // FIXME: Hack to scale a model
+    const float modelScale = 0.5f;
+    translation *= modelScale; 
+
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
     
-    joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
+    joints.push_back(Joint(s, t, originPoint, axis, 0.1*modelScale, name.c_str()));
     /*#ifdef DAE
     joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
 #else
@@ -229,7 +234,7 @@ void transformSpheres(const ModelTree& root,
       n << m->curr->name << "__" << i;
       /* radius changed here by a factor of 5 */
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius/2.0, // /25.0,
+                               m->curr->radius/4.0, // /25.0,
                                n.str()));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)

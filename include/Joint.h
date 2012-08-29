@@ -32,14 +32,20 @@ class Joint{
     : name(n), trans(t), axis(a), points(pts), radius(r),mesh(new StlFile(filename)) 
     {
       if(strcmp(filename, "")!=0){
-      for(int i = 0; i < mesh->numTriangles; i++){
-	btVector3 p1(mesh->triangles[i].pts[0].xyz[0],mesh->triangles[i].pts[0].xyz[1],mesh->triangles[i].pts[0].xyz[2]);
-	btVector3 p2(mesh->triangles[i].pts[1].xyz[0],mesh->triangles[i].pts[1].xyz[1],mesh->triangles[i].pts[1].xyz[2]);
-	btVector3 p3(mesh->triangles[i].pts[2].xyz[0],mesh->triangles[i].pts[2].xyz[1],mesh->triangles[i].pts[2].xyz[2]);
-	btVector3 center = (p1+p2+p3)/3;
-	/* Somewhat fixes scaling issue */
-	center/=10.0;
-	points.push_back(center);	
+        for(int i = 0; i < mesh->numTriangles; i++){
+          btVector3 p1(mesh->triangles[i].pts[0].xyz[0],
+                       mesh->triangles[i].pts[0].xyz[1],
+                       mesh->triangles[i].pts[0].xyz[2]);
+          btVector3 p2(mesh->triangles[i].pts[1].xyz[0],
+                       mesh->triangles[i].pts[1].xyz[1],
+                       mesh->triangles[i].pts[1].xyz[2]);
+          btVector3 p3(mesh->triangles[i].pts[2].xyz[0],
+                       mesh->triangles[i].pts[2].xyz[1],
+                       mesh->triangles[i].pts[2].xyz[2]);
+          btVector3 center = (p1+p2+p3)/3;
+          /* Somewhat fixes scaling issue */
+          center *= r;
+          points.push_back(center);	
       }
       removeOverlaps();
       //std::cout<<filename<<endl;
@@ -56,7 +62,7 @@ class Joint{
     for(int i = 0; i < points.size()-1; i++){
       for(int j = i+1; j<points.size() && noOverlap; j++){
         //if((points[i]-points[j]).length()<0.02)
-        if((points[i]-points[j]).length()<0.08)
+        if((points[i]-points[j]).length()<0.04)
 	  noOverlap=false;
       }
       if(noOverlap){

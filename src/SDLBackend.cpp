@@ -24,7 +24,7 @@ using namespace std;
 #define FOCAL_LENGTH_Y 240.0
 
 #define PI 3.1415926535
-#define SPHERE_RADIUS 0.02
+#define SPHERE_RADIUS 0.05
 
 #define DEG2RAD(x) ((x) * (PI / 180))
 
@@ -291,32 +291,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;
 
-  // FIXME: Always drawing over the first depth map
   btTransform camera;
-/*
-  btVector3 vtmp;
-
-  // A point starting out straight ahead (the negative Z-axis) is
-  // rotated 90 degrees to lie on the negative X-axis. The rotated
-  // point is then translated along the X-axis to arrive at (-1,0,0);
-  vtmp = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5),
-                     btVector3(1,0,0))(btVector3(0,0,-2));
-  cout << "sanity1 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
-
-  // A point starting out ahead and to the right is rotated by 90
-  // degrees, taking it to left-ahead (-2,0,-1).
-  vtmp = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5),
-                     btVector3(0,0,0))(btVector3(1,0,-2));
-  cout << "sanity2 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
-
-  // Now we want to consider a camera that is moved along the positive
-  // X-axis and rotated about its Y-axis to look to the left. A point
-  // on the negative Z-axis should end up ahead-right.
-  camera = btTransform(btQuaternion(btVector3(0,1,0), 3.14159*0.5));
-  camera.setOrigin(camera(-1 * btVector3(1,0,0)));
-  vtmp = camera(btVector3(0,0,-2));
-  cout << "sanity3 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
-*/
 
   camera = checker->getDepthMap(bestView)->trans;
   camera = camera * robotFrame;
@@ -449,17 +424,14 @@ bool SDLBackend::loop(btTransform &robotFrame) {
 	break;
       case SDL_MOUSEMOTION:
 	if(moveFigure==1){
-	  
-	  btVector3 motion(keyevent.motion.xrel, keyevent.motion.yrel,0.0);
-	  btTransform rot(btQuaternion(btVector3(0.0,0.0,1.0), -1.0*PI/2.0), btVector3(0.0,0.0,0.0));
-	  motion=rot(motion);
-	  rot.setRotation(btQuaternion(motion, motion.length()/50.0));
-	  robotFrame = btTransform(btQuaternion::getIdentity(), 
-                                   robotFrame.getOrigin()) *
-                       (rot*btTransform(robotFrame.getRotation(), btVector3(0.0,0.0,0.0)));
+          btTransform robotRot = btTransform(robotFrame.getRotation());
+          btQuaternion yaw = btQuaternion(robotRot(btVector3(0,0,1)), 
+                                          keyevent.motion.xrel/50.0f);
+          robotRot.setRotation(yaw * robotRot.getRotation());
+          btQuaternion tilt = btQuaternion(robotRot(btVector3(0,-1,0)),
+                                           keyevent.motion.yrel/50.0f);
+          robotFrame.setRotation(tilt * robotRot.getRotation());
 	}
-	//printf("The motions are: %d, %d\n",keyevent.motion.xrel, keyevent.motion.yrel);
-	//keyevent.motion.x, keyevent.motion.y
 	break;
       case SDL_MOUSEBUTTONDOWN:
 	
