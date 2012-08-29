@@ -34,6 +34,10 @@ const DepthMap* CollisionChecker::getDepthMap(int i) {
   return this->depthMaps[i];
 }
 
+int CollisionChecker::numDepthMaps() const {
+  return this->depthMaps.size();
+}
+
 void natToStr(const int i, char* s) {
   if(i < 10) {
     *s = (char)((int)'0' + i);

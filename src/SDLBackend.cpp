@@ -26,6 +26,8 @@ using namespace std;
 #define PI 3.1415926535
 #define SPHERE_RADIUS 0.02
 
+#define DEG2RAD(x) ((x) * (PI / 180))
+
 extern btTransform parsePose(const char* filename);
 
 void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
@@ -191,21 +193,100 @@ bool SDLBackend::init(int width, int height) {
   return true;
 }
 
-// FIXME: Gross hack
+// FIXME: Gross hack that allows us to cycle through available views
+// with keyboard controls.
 int bestView = 0;
+
+const int numFrames = 70 + 70 + 90 + 70 + 70;
+
+float interpolate(float start, float stop, float step) {
+  return DEG2RAD(start + (stop - start)*step);
+}
+
+map<string,float>* ymca(int i) {
+  map<string,float> *posture = new map<string,float>();
+  float theta, step;
+  theta = DEG2RAD(-90);
+  (*posture)["l_shoulder_pan_link"] = -theta;
+  (*posture)["r_shoulder_pan_link"] = theta;
+
+  if(i < 70) {
+    // Y
+    step = (float)i / 70.0f;
+    theta = interpolate(0, 70, step);
+    (*posture)["l_shoulder_lift_link"] = -theta;
+    (*posture)["r_shoulder_lift_link"] = -theta;
+  } else if(i < 70 + 70) {
+    // M
+    theta = -DEG2RAD(70.0f);
+    (*posture)["l_shoulder_lift_link"] = theta;
+    (*posture)["r_shoulder_lift_link"] = theta;
+
+    step = (float)(i - 70) / 70.0f;
+    theta = interpolate(0, 70, step);
+    (*posture)["l_elbow_flex_link"] = -theta;
+    (*posture)["r_elbow_flex_link"] = -theta;
+  } else if(i < 70 + 70 + 90) {
+    // C
+    theta = -DEG2RAD(70.0f);
+    (*posture)["l_elbow_flex_link"] = theta;
+
+    step = (float)(i - (70 + 70)) / 90.0f;
+    theta = interpolate(70, -20, step);
+    (*posture)["l_shoulder_lift_link"] = -theta;
+
+    theta = -DEG2RAD(70.0f);
+    (*posture)["r_shoulder_lift_link"] = theta;
+
+    theta = interpolate(70, 35, step);
+    (*posture)["r_elbow_flex_link"] = -theta;
+  } else if(i < 70 + 70 + 90 + 70) {
+    // A
+    step = (float)(i - (70+70+90)) / 70.0f;
+    theta = interpolate(70, 55, step);
+    (*posture)["l_elbow_flex_link"] = -theta;
+
+    theta = interpolate(-35.0f, -55.0f, step);
+    (*posture)["r_elbow_flex_link"] = theta;
+
+    theta = interpolate(-20,75,step);
+    (*posture)["l_shoulder_lift_link"] = -theta;
+
+    theta = interpolate(-70,-75,step);
+    (*posture)["r_shoulder_lift_link"] = theta;
+  } else if(i < 70 + 70 + 90 + 70 + 70) {
+    // Back to start
+    step = (float)(i - (70+70+90+70)) / 70.0f;
+    theta = interpolate(55,0,step);
+    (*posture)["l_elbow_flex_link"] = -theta;
+    (*posture)["r_elbow_flex_link"] = -theta;
+
+    theta = interpolate(75, 0, step);
+    (*posture)["l_shoulder_lift_link"] = -theta;
+    (*posture)["r_shoulder_lift_link"] = -theta;
+  }
+  return posture;
+}
 
 void SDLBackend::renderModel(const ModelTree& rawRoot, 
                              const btTransform &robotFrame) {
   SDL_FillRect(m_display, NULL, 0);
   btVector3 origin(0,0,0);
 
+  static int currentFrame = 0;
+
+/*
   map<string,float> posture;
   // Lift the PR2's left arm by 45 degrees and swing the right arm out.
   posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
   posture["r_shoulder_pan_link"] = -45.0f * PI / 180;
+*/
+  map<string,float>* posture = ymca(currentFrame);
+  currentFrame++;
+  if(currentFrame >= numFrames) currentFrame = 0;
   
   vector<float> postureVec;
-  checker->makeJointVector(posture, postureVec);
+  checker->makeJointVector(*posture, postureVec);
 
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;
@@ -237,7 +318,6 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   cout << "sanity3 " << vtmp.getX() << ", " << vtmp.getY() << ", " << vtmp.getZ() << endl;
 */
 
-  //int bestView = 0;
   camera = checker->getDepthMap(bestView)->trans;
   camera = camera * robotFrame;
   
@@ -264,7 +344,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   cout << "(" << 1.0 / seconds << " Hz)" << endl;
   cout << "  with " << collisionInfo.size() << " components" << endl;
 
-  ModelTree* root = poseModel(rawRoot, posture);
+  ModelTree* root = poseModel(rawRoot, *posture);
 
   vector<CameraSphere> spheres;
   painterSort(*root, camera, spheres);
@@ -360,7 +440,8 @@ bool SDLBackend::loop(btTransform &robotFrame) {
         case SDLK_PAGEDOWN:
           translateRobot.setZ(0);
         case SDLK_v:
-          bestView = !bestView;
+          bestView++;
+          if(bestView >= this->checker->numDepthMaps()) bestView = 0;
           break;
         default:
           break;
