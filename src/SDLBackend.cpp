@@ -9,6 +9,8 @@
 #include <algorithm>
 #include "CollisionChecker.h"
 #include <sys/time.h>
+#include "YMCA.h"
+#include "Planner.h"
 
 using namespace std;
 
@@ -21,12 +23,10 @@ using namespace std;
 // with a focal length of 1.0.
 #define FOCAL_LENGTH 320.0
 #define FOCAL_LENGTH_X 320.0
-#define FOCAL_LENGTH_Y 240.0
+//#define FOCAL_LENGTH_Y 240.0
+#define FOCAL_LENGTH_Y 320.0
 
 #define PI 3.1415926535
-#define SPHERE_RADIUS 0.05
-
-#define DEG2RAD(x) ((x) * (PI / 180))
 
 extern btTransform parsePose(const char* filename);
 
@@ -52,16 +52,6 @@ SDLBackend::~SDLBackend() {
   printf("SDL shutdown\n");
   SDL_Quit();
 }
-
-/*
-// Camera coordinate system to screen space
-inline btVector3 SDLBackend::cameraToScreen(btVector3 pt) {
-  // The scaling factor just zooms things in a bit. It is arbitrary.
-  static const btVector3 scale = btVector3(FOCAL_LENGTH_X, FOCAL_LENGTH_Y, 1);
-  btVector3 v = pt * scale + cameraToScreenTranslation;
-  return v;
-}
-*/
 
 // Perspective projection
 inline btVector3 SDLBackend::project(btVector3 v) {
@@ -198,83 +188,34 @@ bool SDLBackend::init(int width, int height) {
 // with keyboard controls.
 int bestView = 0;
 
-const int numFrames = 70 + 70 + 90 + 70 + 70;
+// 5cm sphere radius
+// const btVector3 pathStart(12.3, 3.9, 1.8);
+// const btVector3 pathGoal(11.7, 3.0, 6.4);
 
-float interpolate(float start, float stop, float step) {
-  return DEG2RAD(start + (stop - start)*step);
+// 10cm sphere radius
+// const btVector3 pathStart(12.3, 3.9, 1.8);
+// const btVector3 pathGoal(11.6, 2.9, 6.5);
+const btVector3 pathStart(12.3, 3.8, 1.8);
+const btVector3 pathGoal(11.6, 2.75, 6.5);
+
+
+// Returns the requested frame of the YMCA animation and advances the
+// frame index.
+const map<string,float>& ymca(int& i) {
+  static YMCA script;
+  int tmp = i;
+  i = script.nextFrame(i);
+  return script.getJointAngles(tmp);
 }
 
-map<string,float>* ymca(int i) {
-  map<string,float> *posture = new map<string,float>();
-  float theta, step;
-  theta = DEG2RAD(-90);
-  (*posture)["l_shoulder_pan_link"] = -theta;
-  (*posture)["r_shoulder_pan_link"] = theta;
-
-  if(i < 70) {
-    // Y
-    step = (float)i / 70.0f;
-    theta = interpolate(0, 70, step);
-    (*posture)["l_shoulder_lift_link"] = -theta;
-    (*posture)["r_shoulder_lift_link"] = -theta;
-  } else if(i < 70 + 70) {
-    // M
-    theta = -DEG2RAD(70.0f);
-    (*posture)["l_shoulder_lift_link"] = theta;
-    (*posture)["r_shoulder_lift_link"] = theta;
-
-    step = (float)(i - 70) / 70.0f;
-    theta = interpolate(0, 70, step);
-    (*posture)["l_elbow_flex_link"] = -theta;
-    (*posture)["r_elbow_flex_link"] = -theta;
-  } else if(i < 70 + 70 + 90) {
-    // C
-    theta = -DEG2RAD(70.0f);
-    (*posture)["l_elbow_flex_link"] = theta;
-
-    step = (float)(i - (70 + 70)) / 90.0f;
-    theta = interpolate(70, -20, step);
-    (*posture)["l_shoulder_lift_link"] = -theta;
-
-    theta = -DEG2RAD(70.0f);
-    (*posture)["r_shoulder_lift_link"] = theta;
-
-    theta = interpolate(70, 35, step);
-    (*posture)["r_elbow_flex_link"] = -theta;
-  } else if(i < 70 + 70 + 90 + 70) {
-    // A
-    step = (float)(i - (70+70+90)) / 70.0f;
-    theta = interpolate(70, 55, step);
-    (*posture)["l_elbow_flex_link"] = -theta;
-
-    theta = interpolate(-35.0f, -55.0f, step);
-    (*posture)["r_elbow_flex_link"] = theta;
-
-    theta = interpolate(-20,75,step);
-    (*posture)["l_shoulder_lift_link"] = -theta;
-
-    theta = interpolate(-70,-75,step);
-    (*posture)["r_shoulder_lift_link"] = theta;
-  } else if(i < 70 + 70 + 90 + 70 + 70) {
-    // Back to start
-    step = (float)(i - (70+70+90+70)) / 70.0f;
-    theta = interpolate(55,0,step);
-    (*posture)["l_elbow_flex_link"] = -theta;
-    (*posture)["r_elbow_flex_link"] = -theta;
-
-    theta = interpolate(75, 0, step);
-    (*posture)["l_shoulder_lift_link"] = -theta;
-    (*posture)["r_shoulder_lift_link"] = -theta;
-  }
-  return posture;
-}
+int firstTime = 1;
+vector<btTransform> pathFound;
+int currentDanceFrame = 0;
 
 void SDLBackend::renderModel(const ModelTree& rawRoot, 
                              const btTransform &robotFrame) {
   SDL_FillRect(m_display, NULL, 0);
   btVector3 origin(0,0,0);
-
-  static int currentFrame = 0;
 
 /*
   map<string,float> posture;
@@ -282,12 +223,10 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
   posture["r_shoulder_pan_link"] = -45.0f * PI / 180;
 */
-  map<string,float>* posture = ymca(currentFrame);
-  currentFrame++;
-  if(currentFrame >= numFrames) currentFrame = 0;
+  const map<string,float>& posture = ymca(currentDanceFrame);
   
   vector<float> postureVec;
-  checker->makeJointVector(*posture, postureVec);
+  checker->makeJointVector(posture, postureVec);
 
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;
@@ -300,12 +239,20 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   struct timeval start;
   struct timeval stop;
   gettimeofday(&start, NULL);
-  cout << "First depth map tested is " << checker->getDepthMap(0)->depthID << endl;
   for(int i = 0; i < 1000; i++) {
     checker->getCollisionInfo(robotFrame, SPHERE_RADIUS, postureVec, collisionVec);
   }
   gettimeofday(&stop, NULL);
   checker->makeCollisionMap(collisionVec, collisionInfo);
+  for(int j = 0; j < collisionVec.size(); j++) {
+    if(collisionVec[j]) {
+      const btVector3 t = robotFrame.getOrigin();
+      cout << endl << "***BOOM! at (" << t.x() << ", " << t.y() << ", ";
+      cout << t.z() << ") at frame " << (currentDanceFrame - 1)/4 << endl;
+      cout << endl;
+      break;
+    }
+  }
   /*
   for(map<string,bool>::const_iterator it = collisionInfo.begin();
       it != collisionInfo.end();
@@ -321,7 +268,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   cout << "(" << 1.0 / seconds << " Hz)" << endl;
   cout << "  with " << collisionInfo.size() << " components" << endl;
 
-  ModelTree* root = poseModel(rawRoot, *posture);
+  ModelTree* root = poseModel(rawRoot, posture);
 
   vector<CameraSphere> spheres;
   painterSort(*root, camera, spheres);
@@ -363,10 +310,54 @@ void SDLBackend::drawDepthMap(const DepthMap* depth, const float r){
 
 /* Check UI events, render the current frame, and return true if we
  * should continue looping and false if the user asked to quit. */
-bool SDLBackend::loop(btTransform &robotFrame) {
+bool SDLBackend::loop(btTransform& robotFrame) {
   SDL_Event keyevent;    //The SDL event that we will poll to get events.
   static int moveFigure=0;
   static btVector3 translateRobot;
+
+  // Find and navigate path
+  static int currentPathPose = 0;
+  static int subFrame = 0;
+
+  if(firstTime) {
+    YMCA script;
+    btTransform safeStart(robotFrame.getRotation(), pathStart);
+    Planner p(*checker);
+    pathFound = p.findPath(script, safeStart, 
+                           btTransform(btQuaternion::getIdentity(), pathGoal));
+    //pathFound = findPath(safeStart); //robotFrame);
+    firstTime = 0;
+  }
+  static int lastActiveDepthMap = checker->getActiveDepthMap()->depthID;
+  static int oneViewNeeded = 0;
+  static int multipleViewsNeeded = 0;
+
+  if(currentPathPose < pathFound.size() - 1) {
+    robotFrame = pathFound[currentPathPose];
+    if(subFrame != 0 && currentPathPose < pathFound.size() - 1) {
+      // Interpolate poses.
+      btTransform tmp = pathFound[currentPathPose+1];
+      float s = (float)subFrame / 4.0f;
+      robotFrame.setRotation(robotFrame.getRotation().slerp(tmp.getRotation(), s));
+      robotFrame.setOrigin(s * (tmp.getOrigin() - robotFrame.getOrigin()) + 
+                           robotFrame.getOrigin());
+    }
+    currentDanceFrame = currentPathPose*4 + subFrame;
+    subFrame++;
+    if(subFrame == 4) {
+      currentPathPose++;
+      subFrame = 0;
+    }
+    if(checker->getActiveDepthMap()->depthID == lastActiveDepthMap) {
+      oneViewNeeded++;
+    } else {
+      multipleViewsNeeded++;
+      lastActiveDepthMap = checker->getActiveDepthMap()->depthID;
+    }
+  } else {
+    cout << "Poses were collision checked in a single view " << (float)oneViewNeeded / (float)(oneViewNeeded+multipleViewsNeeded) << "% of the time." << endl;
+  }
+
   while (SDL_PollEvent(&keyevent))   //Poll our SDL key event for any keystrokes.
     {
       
@@ -420,6 +411,8 @@ bool SDLBackend::loop(btTransform &robotFrame) {
           bestView++;
           if(bestView >= this->checker->numDepthMaps()) bestView = 0;
           break;
+        case SDLK_r:
+          currentPathPose = 0;
         default:
           break;
 	}
@@ -432,6 +425,7 @@ bool SDLBackend::loop(btTransform &robotFrame) {
           robotRot.setRotation(yaw * robotRot.getRotation());
           btQuaternion tilt = btQuaternion(robotRot(btVector3(0,-1,0)),
                                            keyevent.motion.yrel/50.0f);
+          tilt = btQuaternion::getIdentity();
           robotFrame.setRotation(tilt * robotRot.getRotation());
 	}
 	break;

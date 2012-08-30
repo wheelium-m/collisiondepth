@@ -31,7 +31,15 @@ void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
 }
 
 const DepthMap* CollisionChecker::getDepthMap(int i) {
-  return this->depthMaps[i];
+  for(int j = 0; j < depthMaps.size(); j++) {
+    if(depthMaps[j]->depthID == i) return depthMaps[j];
+  }
+  return NULL;
+  //return this->depthMaps[i];
+}
+
+const DepthMap* CollisionChecker::getActiveDepthMap() {
+  return depthMaps[0];
 }
 
 int CollisionChecker::numDepthMaps() const {
@@ -41,9 +49,13 @@ int CollisionChecker::numDepthMaps() const {
 void natToStr(const int i, char* s) {
   if(i < 10) {
     *s = (char)((int)'0' + i);
-  } else {
+  } else if(i < 100) {
     *s = (char)((int)'0' + (i / 10));
     *(s+1) = (char)((int)'0' + (i % 10));
+  } else if(i < 1000) {
+    *s = (char)((int)'0' + (i / 100));
+    *(s+1) = (char)((int)'0' + (i%100)/10);
+    *(s+2) = (char)((int)'0' + i%10);
   }
 }
 
@@ -79,13 +91,14 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
 
     // ASCII string munging.
     int offset = m->curr->name.length();
-    char name[offset+5];
+    char name[offset+6];
     memcpy(name, m->curr->name.c_str(), m->curr->name.length());
     name[offset] = '_';
     name[offset+1] = '_';
     name[offset+2] = 0;
     name[offset+3] = 0;
     name[offset+4] = 0;
+    name[offset+5] = 0;
     
     for(int i = 0; i < m->curr->points.size(); i++) {
       //stringstream n;

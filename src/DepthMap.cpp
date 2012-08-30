@@ -66,8 +66,7 @@ float* DepthMap::bloomDepths(const float* old,
 
   for(int y = 0; y < height; y++) {
     for(int x = 0; x < width; x++, old++) {
-      float dist = *old;
-      //if(dist == 0.0f) continue; // Don't splat unknown points
+      float dist = *old - r; // Pad observed geometry by r
       
       // Don't splat unknown points or those very close to the camera.
       if(dist < 0.2f) continue; 

@@ -5,6 +5,7 @@
 #include "Model.h"
 #include "DepthMap.h"
 #include "CollisionChecker.h"
+#include "Pose.h"
 #include <list>
 #include <SDL.h>
 #include <btBulletDynamicsCommon.h>
@@ -19,6 +20,13 @@ public:
   virtual bool init(int width, int height);
   virtual bool loop(btTransform &camera);
   virtual void addDepthMap(const char* depthImg, const char* imgPose);
+
+  // virtual bool checkPose(const Pose&);
+  // virtual void addNeighbors(const int parent,
+  //                           std::vector<Pose>& heap, 
+  //                           std::vector<int>& closedSet, 
+  //                           const Pose& p);
+  // virtual std::vector<btTransform> findPath(const btTransform& startPose);
 private:
   btVector3 cameraToScreenTranslation;
   SDL_Surface* m_display;

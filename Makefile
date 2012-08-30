@@ -1,7 +1,7 @@
 CC=$(shell (command -v clang++ >/dev/null && echo "clang++" || echo "g++"))
 CFLAGS += -Iinclude $(shell pkg-config --cflags bullet)\
  $(shell pkg-config --cflags sdl)\
- $(shell pkg-config --cflags SDL_gfx) -O3 -Wall
+ $(shell pkg-config --cflags SDL_gfx) -O3 -Wall -DSPHERE_RADIUS=0.1
 
 # --std=c++11 -stdlib=libc++
 
@@ -14,7 +14,7 @@ MACLIBS = $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
  $(shell pkg-config --libs SDL_gfx)
 
 OBJS = SDLBackend.o Model.o HeatPalette.o DepthMap.o StlFile.o\
- CollisionChecker.o PoseParser.o
+ CollisionChecker.o PoseParser.o YMCA.o Planner.o
 
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL -g -ltinyxml

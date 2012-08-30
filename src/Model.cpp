@@ -211,6 +211,8 @@ void transformSpheres(const ModelTree& root,
                       vector<CameraSphere>& v) {
   btVector3 origin(0,0,0);
   queue<pair<ModelTree*, btTransform> > q;
+  const float radScale = 1.0f; //2.0f;
+  const float tinySphereScale = 2.0f; //4.0f * radScale;
 
   for(ModelTree::child_iterator it = root.begin();
       it != root.end();
@@ -219,7 +221,7 @@ void transformSpheres(const ModelTree& root,
   }
   /* radius changed here by a factor of 5 */
   v.push_back(CameraSphere(camera(root.curr->trans(origin)), 
-                           root.curr->radius, // /5.0, 
+                           root.curr->radius / radScale, 
                            root.curr->name));
   while(!q.empty()) {
     ModelTree* m = q.front().first;
@@ -227,14 +229,14 @@ void transformSpheres(const ModelTree& root,
     q.pop();
     /* radius changed here by a factor of 5 */
     v.push_back(CameraSphere(camera(t(origin)), 
-                             m->curr->radius, // /5.0, 
+                             m->curr->radius / radScale, 
                              m->curr->name));
     for(int i = 0; i < m->curr->points.size(); i++) {
       stringstream n;
       n << m->curr->name << "__" << i;
       /* radius changed here by a factor of 5 */
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius/4.0, // /25.0,
+                               m->curr->radius / tinySphereScale, // /25.0,
                                n.str()));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)
