@@ -38,20 +38,10 @@ void go(Renderer& renderer) {
   btVector3 trans(13.614223,4.6128845,3.0635848);
   btTransform robotFrame = btTransform(rot,trans);
 
-  //float zVel = 0.05;
-  float zVel = 0.0;
-
-  //robotFrame.setRotation(btQuaternion::getIdentity());
-  // robotFrame.setOrigin(btVector3(robotFrame.getOrigin().x(),
-  //                                robotFrame.getOrigin().y(),
-  //                                6));
   while(renderer.loop(robotFrame)) {
-    robotFrame.setOrigin(robotFrame.getOrigin() + btVector3(0,0,zVel));
-    if(robotFrame.getOrigin().getZ() > 6) {
-      if(zVel > 0) zVel = -zVel;
-    } else if(robotFrame.getOrigin().getZ() < 1) {
-      if(zVel < 0) zVel = -zVel;
-    }
+    btVector3 t = robotFrame.getOrigin();
+    cout << "Robot at (" << t.x() << ", " << t.y() << ", ";
+    cout << t.z() << ")" << endl;
   }
 }
 
