@@ -38,7 +38,7 @@ void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
   depth->trans = btTransform(t.getRotation(), // .inverse(), 
                              btTransform(t.getRotation())(-1 * t.getOrigin()));
   depth->transInv = depth->trans.inverse();
-  depth->addDilation(SPHERE_RADIUS);
+  depth->addDilation(SPHERE_RADIUS*MODEL_SCALE);
   this->checker->addDepthMap(depth);
 }
 
@@ -240,7 +240,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   struct timeval stop;
   gettimeofday(&start, NULL);
   for(int i = 0; i < 1000; i++) {
-    checker->getCollisionInfo(robotFrame, SPHERE_RADIUS, postureVec, collisionVec);
+    checker->getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, postureVec, collisionVec);
   }
   gettimeofday(&stop, NULL);
   checker->makeCollisionMap(collisionVec, collisionInfo);
@@ -253,13 +253,6 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
       break;
     }
   }
-  /*
-  for(map<string,bool>::const_iterator it = collisionInfo.begin();
-      it != collisionInfo.end();
-      it++) {
-    cout << it->first << " => " << it->second << endl;
-  }
-  */
 
   float seconds = (stop.tv_sec - start.tv_sec) + \
                   0.000001f * (float)(stop.tv_usec - start.tv_usec);
@@ -276,7 +269,7 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   
   const DepthMap* depth = this->checker->getDepthMap(bestView);
 
-  drawDepthMap(depth, SPHERE_RADIUS);
+  drawDepthMap(depth, SPHERE_RADIUS*MODEL_SCALE);
 
   for(int i = 0; i < spheres.size(); i++) 
     drawSphere(collisionInfo[spheres[i].jointName], rowIntervals, 

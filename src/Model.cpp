@@ -5,6 +5,7 @@
 #include <map>
 #include <queue>
 #include <algorithm>
+#include "CollisionModel.h"
 
 using namespace std;
 
@@ -60,12 +61,14 @@ ModelTree* readDump(const char* fileName) {
     getline(f,name,'\n');
 
     // FIXME: Hack to scale a model
-    const float modelScale = 0.5f;
+    //const float modelScale = 0.5f;
+    const float modelScale = MODEL_SCALE;
     translation *= modelScale; 
 
     btTransform t(btQuaternion(rpy.z(), rpy.y(), rpy.x()), translation);
     
-    joints.push_back(Joint(s, t, originPoint, axis, 0.1*modelScale, name.c_str()));
+    //joints.push_back(Joint(s, t, /*originPoint,*/ axis, 0.1*modelScale, name.c_str()));
+    joints.push_back(Joint(s, t, /*originPoint,*/ axis, SPHERE_RADIUS * modelScale));
     /*#ifdef DAE
     joints.push_back(Joint(s, t, originPoint, axis, 0.1f, name.c_str()));
 #else
@@ -116,6 +119,31 @@ void makeSpheres(ModelTree *t) {
   }
 }
 
+// Add spheres from Ben Cohen's PR2 YAML body file
+void addCollisionSpheres(ModelTree* t) {
+  CollisionGeometry* cg = pr2CollisionGeometry("BenYaml/etc/pr2_body.txt");
+  queue<ModelTree*> q;
+  q.push(t);
+  while(!q.empty()) {
+    ModelTree* c = q.front();
+    q.pop();
+    CollisionGeometry::const_iterator it = cg->find(c->curr->name);
+    if(it != cg->end()) {
+      for(vector<CollisionSphere>::const_iterator sphit = it->second.begin();
+          sphit != it->second.end();
+          sphit++) {
+        c->curr->points.push_back(btVector3(sphit->x, sphit->y, sphit->z) * MODEL_SCALE);
+      }
+    }
+    for(ModelTree::child_iterator cit = c->begin();
+        cit != c->end();
+        cit++) {
+      q.push(*cit);
+    }
+  }
+  delete cg;
+}
+
 ModelTree* initPR2() {
 #ifdef DAE
   ModelTree* t = readDump("UrdfDumper/etc/newpr2.txt");
@@ -123,7 +151,9 @@ ModelTree* initPR2() {
   ModelTree* t = readDump("UrdfDumper/etc/something.txt");
   //ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
 #endif
-  makeSpheres(t);
+  
+  //makeSpheres(t);
+  addCollisionSpheres(t);
   return t;
 }
 
@@ -209,10 +239,10 @@ void painterSort(const ModelTree& root,
 void transformSpheres(const ModelTree& root, 
                       const btTransform& camera, 
                       vector<CameraSphere>& v) {
-  btVector3 origin(0,0,0);
+  //btVector3 origin(0,0,0);
   queue<pair<ModelTree*, btTransform> > q;
-  const float radScale = 1.0f; //2.0f;
-  const float tinySphereScale = 2.0f; //4.0f * radScale;
+  //const float radScale = 1.0f; //2.0f;
+  //const float tinySphereScale = 2.0f; //4.0f * radScale;
 
   for(ModelTree::child_iterator it = root.begin();
       it != root.end();
@@ -220,23 +250,22 @@ void transformSpheres(const ModelTree& root,
     q.push(make_pair(*it, root.curr->trans));
   }
   /* radius changed here by a factor of 5 */
-  v.push_back(CameraSphere(camera(root.curr->trans(origin)), 
-                           root.curr->radius / radScale, 
-                           root.curr->name));
+  // v.push_back(CameraSphere(camera(root.curr->trans(origin)), 
+  //                          root.curr->radius / radScale, 
+  //                          root.curr->name));
   while(!q.empty()) {
     ModelTree* m = q.front().first;
     btTransform t = q.front().second * m->curr->trans;
     q.pop();
     /* radius changed here by a factor of 5 */
-    v.push_back(CameraSphere(camera(t(origin)), 
-                             m->curr->radius / radScale, 
-                             m->curr->name));
+    // v.push_back(CameraSphere(camera(t(origin)), 
+    //                          m->curr->radius / radScale, 
+    //                          m->curr->name));
     for(int i = 0; i < m->curr->points.size(); i++) {
       stringstream n;
       n << m->curr->name << "__" << i;
-      /* radius changed here by a factor of 5 */
       v.push_back(CameraSphere(camera(t(m->curr->points[i])), 
-                               m->curr->radius / tinySphereScale, // /25.0,
+                               m->curr->radius,// / tinySphereScale,
                                n.str()));
     }
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++)

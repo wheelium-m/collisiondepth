@@ -24,9 +24,14 @@ class Joint{
       points(orig.points), radius(orig.radius), mesh(NULL) {
     if(orig.mesh) this->mesh = new StlFile(orig.mesh);
   }
-  Joint(std::string n, btTransform t, std::vector<btVector3> pts, 
+
+  Joint(std::string n, btTransform t, std::vector<btVector3> pts,
         btVector3 a, float r)
     : name(n), trans(t), axis(a), points(pts), radius(r), mesh(NULL) {};
+
+  Joint(std::string n, btTransform t, btVector3 a, float r)
+    : name(n), trans(t), axis(a), radius(r), mesh(NULL) {};
+
   Joint(std::string n, btTransform t, std::vector<btVector3> pts, 
         btVector3 a, float r, const char * filename)
     : name(n), trans(t), axis(a), points(pts), radius(r),mesh(new StlFile(filename)) 

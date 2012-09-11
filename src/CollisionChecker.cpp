@@ -18,7 +18,7 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
-    this->numSpheres += 1 + m->curr->points.size();
+    this->numSpheres += m->curr->points.size();
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
       q.push(*it);
     }
@@ -87,7 +87,9 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
-    collisionMap[m->curr->name] = !collisionVec[sphereIndex++];
+
+    // No default sphere-per-link
+    //collisionMap[m->curr->name] = !collisionVec[sphereIndex++];
 
     // ASCII string munging.
     int offset = m->curr->name.length();
@@ -113,7 +115,7 @@ void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
   }
 }
 
-static vector<vector<pair<btTransform, const ModelTree*> > > perThreadQ(64);
+//static vector<vector<pair<btTransform, const ModelTree*> > > perThreadQ(64);
 
 // Check a posed model against an individual depth map.
 void checkMap(const int threadId,
@@ -123,7 +125,7 @@ void checkMap(const int threadId,
               const btTransform& robotFrame,
               const float sphereRadius,
               const vector<float>& jointAngles) {
-  const btVector3 origin = btVector3(0,0,0);
+  //const btVector3 origin = btVector3(0,0,0);
   const float* const dmap = depth->getMap(sphereRadius);
   const int w = depth->width;
   const int h = depth->height;
@@ -140,8 +142,8 @@ void checkMap(const int threadId,
 
   // Making the queue static should allow for less resizing on
   // successive checks.
-  //static vector<pair<btTransform, const ModelTree*> > q;
-  vector<pair<btTransform, const ModelTree*> >& q = perThreadQ[threadId];
+  static vector<pair<btTransform, const ModelTree*> > q;
+  //vector<pair<btTransform, const ModelTree*> >& q = perThreadQ[threadId];
   q.clear();
   q.push_back(make_pair(btTransform::getIdentity(), models[0]));
 
@@ -161,9 +163,11 @@ void checkMap(const int threadId,
       t = t * j->trans;
   
     // Now check the child joint's spheres
-    const int sz = j->points.size();
-    const btTransform modelToCamera = robotFrame * t;
+    //const int sz = j->points.size();
 
+    const btTransform modelToCamera = robotFrame * t;
+    // No default sphere-per-link
+/*
     btVector3 spherePt = modelToCamera(origin);
     for(int i = 0;; i++) {
       sphereIndex++;
@@ -192,6 +196,37 @@ void checkMap(const int threadId,
       // Iterate through the child spheres
       if(i == sz) break;
       spherePt = modelToCamera(j->points[i]);
+    }
+*/
+    btVector3 spherePt;
+    for(int i = 0; i < j->points.size(); i++) {
+      spherePt = modelToCamera(j->points[i]);
+      sphereIndex++;
+      btVector3 camSpace = depthTrans(spherePt);
+
+      camSpace.setZ(-camSpace.getZ());
+      // Can't say anything about a sphere behind the camera
+      if(camSpace.z() - sphereRadius >= 0) {
+        const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
+        const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
+
+        if(screenX >= 0 && screenX < w &&
+           screenY >= 0 && screenY < h) {
+          // Make a note if we have have evidence that a sphere is *not*
+          // in collision.
+          float observedDepth = *(dmap+screenY*w+screenX);
+
+          // FIXME: This is the test we want to do...
+          //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
+          // But since we want to declare "no information" as a good
+          // thing for testing purposes...
+          if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
+            (*possibleCollision)[sphereIndex] = false;
+        }
+      }
+      // // Iterate through the child spheres
+      // if(i == sz) break;
+      // spherePt = modelToCamera(j->points[i]);
     }
 
     for(ModelTree::child_iterator it = child->begin(); 
