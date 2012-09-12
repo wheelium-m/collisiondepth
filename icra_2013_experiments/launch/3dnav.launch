@@ -30,5 +30,9 @@
     <rosparam file="$(find sbpl_3dnav_planner)/config/global_costmap_params.yaml" command="load" />
     <rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_trajectory.yaml" command="load" />
     <rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_poses.yaml" command="load" />
+    
+    <param name="icra2013/use_anthony_cc" value="true"/>
+    <param name="icra2013/use_ben_cc" value="true"/>
+    <param name="icra2013/use_anthony_cc_as_primary" value="true"/>
   </node>
 </launch>

@@ -31,11 +31,13 @@ btTransform parsePose(const char* filename) {
 
   // The pose text file format consists of two lines
   getline(f, s);
+  cout << "Read pose line " << s << endl;
   tokenize(s, tokens);
   getline(f,s);
+  cout << "Read pose line " << s << endl;
   tokenize(s, tokens);
   if(tokens.size() != 10) {
-    cout << "Didn't find 10 space-separated tokens in a pose file!" << endl;
+    cout << "Didn't find 10 space-separated tokens in " << filename << endl;
     exit(-1);
   }
   btQuaternion r = btQuaternion(stof(tokens[3]), stof(tokens[4]), 

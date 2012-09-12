@@ -20,21 +20,30 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
   this->numSpheres = 0;
   this->numJoints = 0;
   // Initialize SBPL joint remapping
-  const string langleNames[] = {"l_shoulder_pan_joint", "l_shoulder_lift_joint", 
-                                "l_upper_arm_roll_joint", "l_elbow_flex_joint",
-                                "l_forearm_roll_joint", "l_wrist_flex_joint", 
-                                "l_wrist_roll_joint"};
-  const string rangleNames[] = {"r_shoulder_pan_joint", "r_shoulder_lift_joint",
-                                "r_upper_arm_roll_joint", "r_elbow_flex_joint",
-                                "r_forearm_roll_joint", "r_wrist_flex_joint",
-                                "r_wrist_roll_joint"};
+  const string langleNames[] = {"l_shoulder_pan_link", "l_shoulder_lift_link", 
+                                "l_upper_arm_roll_link", "l_elbow_flex_link",
+                                "l_forearm_roll_link", "l_wrist_flex_link", 
+                                "l_wrist_roll_link"};
+  const string rangleNames[] = {"r_shoulder_pan_link", "r_shoulder_lift_link",
+                                "r_upper_arm_roll_link", "r_elbow_flex_link",
+                                "r_forearm_roll_link", "r_wrist_flex_link",
+                                "r_wrist_roll_link"};
+  langleRemap.resize(7);
+  rangleRemap.resize(7);
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
+    cout << "Encountered frame " << m->curr->name << "(" << m->curr->name.size() << ")" << endl;
+    for(int i = 0; i < 7; i++) {
+      cout << "  " << langleNames[i] << "(" << langleNames[i].size() << ")" << endl;
+      if(langleNames[i].compare(m->curr->name) == 0) {
+	cout << "langleRemap " << i << " to " << numJoints << endl;
+	langleRemap[i] = numJoints;
+      }
+    }
     for(int i = 0; i < 7; i++)
-      if(langleNames[i] == m->curr->name) langleRemap[i] = numJoints;
-    for(int i = 0; i < 7; i++)
-      if(rangleNames[i] == m->curr->name) rangleRemap[i] = numJoints;
+      if(rangleNames[i].compare(m->curr->name) == 0)
+	rangleRemap[i] = numJoints;
     this->numJoints++;
     this->numSpheres += m->curr->points.size();
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
@@ -42,6 +51,7 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
     }
   }
   cout << "Model has " << numSpheres << " spheres" << endl;
+  
 }
 
 void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
@@ -303,7 +313,9 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
   static vector<bool> collisions;
 
   // Joint angle remapping
+  //cout << "Joint angle remapping" << endl;
   for(int i = 0; i < 7; i++) {
+    //cout << "remapping langle " << i << " to " << langleRemap[i] << endl;
     jointAngles[langleRemap[i]] = langles[i];
   }
 
@@ -311,6 +323,7 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
     jointAngles[rangleRemap[i]] = rangles[i];
   }
 
+  //cout << "Setting up robotFrame" << endl;
   btTransform robotFrame = btTransform(btQuaternion(btVector3(0,1,0), pose.theta),
                                        btVector3(pose.x, pose.y, pose.z));
   getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, jointAngles, collisions);
@@ -401,8 +414,8 @@ void CollisionChecker::levineInit() {
   vector<string> poseFiles;
   while((dirp=readdir(dp)) != NULL) {
     string fname(dirp->d_name);
-    if(fname.find(".bin") != string::npos) imgFiles.push_back(fname);
-    else if(fname.find("pose.txt") != string::npos) poseFiles.push_back(fname);
+    if(fname.find(".bin") != string::npos) imgFiles.push_back(string(fname));
+    else if(fname.find("pose.txt") != string::npos) poseFiles.push_back(string(fname));
   }
   if(imgFiles.size() != poseFiles.size()) {
     cout << "Didn't find matching number of depth images and poses" << endl;
@@ -410,9 +423,9 @@ void CollisionChecker::levineInit() {
   }
   for(int i = 0; i < imgFiles.size(); i++) {
     imgFiles[i].insert(0, depthMapDir);
-    makePath(imgFiles[i]);
     poseFiles[i].insert(0, depthMapDir);
-    makePath(poseFiles[i]);
+    cout << "Image file: " << imgFiles[i] << endl;
+    cout << "Pose file: " << poseFiles[i] << endl;
   }
   // const char* dmaps[] = {"etc/depths1.bin", "etc/depths1pose.txt",
   //                        "etc/depths2.bin", "etc/depths2pose.txt",
