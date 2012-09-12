@@ -6,6 +6,9 @@
 #include <vector>
 #include "StlFile.h"
 
+#define SPHERE_RADIUS 0.2
+#define MODEL_SCALE 0.5
+
 class Joint{
  public:
   std::string name;
