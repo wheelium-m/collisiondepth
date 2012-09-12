@@ -15,9 +15,24 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
   queue<const ModelTree*> q;
   q.push(root);
   this->numSpheres = 0;
+  this->numJoints = 0;
+  // Initialize SBPL joint remapping
+  const string langleNames[] = {"l_shoulder_pan_joint", "l_shoulder_lift_joint", 
+                                "l_upper_arm_roll_joint", "l_elbow_flex_joint",
+                                "l_forearm_roll_joint", "l_wrist_flex_joint", 
+                                "l_wrist_roll_joint"};
+  const string rangleNames[] = {"r_shoulder_pan_joint", "r_shoulder_lift_joint",
+                                "r_upper_arm_roll_joint", "r_elbow_flex_joint",
+                                "r_forearm_roll_joint", "r_wrist_flex_joint",
+                                "r_wrist_roll_joint"};
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
+    for(int i = 0; i < 7; i++)
+      if(langleNames[i] == m->curr->name) langleRemap[i] = numJoints;
+    for(int i = 0; i < 7; i++)
+      if(rangleNames[i] == m->curr->name) rangleRemap[i] = numJoints;
+    this->numJoints++;
     this->numSpheres += m->curr->points.size();
     for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
       q.push(*it);
@@ -165,68 +180,34 @@ void checkMap(const int threadId,
     // Now check the child joint's spheres
     //const int sz = j->points.size();
 
-    const btTransform modelToCamera = robotFrame * t;
-    // No default sphere-per-link
-/*
-    btVector3 spherePt = modelToCamera(origin);
-    for(int i = 0;; i++) {
-      sphereIndex++;
-      btVector3 camSpace = depthTrans(spherePt);
+    if(j->points.size()) {
+      const btTransform modelToCamera = robotFrame * t;
+      for(int i = 0; i < j->points.size(); i++) {
+        const btVector3 spherePt = modelToCamera(j->points[i]);
+        sphereIndex++;
+        btVector3 camSpace = depthTrans(spherePt);
+        
+        camSpace.setZ(-camSpace.getZ());
+        // Can't say anything about a sphere behind the camera
+        if(camSpace.z() - sphereRadius >= 0) {
+          const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
+          const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
 
-      camSpace.setZ(-camSpace.getZ());
-      // Can't say anything about a sphere behind the camera
-      if(camSpace.z() - sphereRadius >= 0) {
-        const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
-        const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
-
-        if(screenX >= 0 && screenX < w &&
-           screenY >= 0 && screenY < h) {
-          // Make a note if we have have evidence that a sphere is *not*
-          // in collision.
-          float observedDepth = *(dmap+screenY*w+screenX);
-
-          // FIXME: This is the test we want to do...
-          //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
-          // But since we want to declare "no information" as a good
-          // thing for testing purposes...
-          if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
-            (*possibleCollision)[sphereIndex] = false;
+          if(screenX >= 0 && screenX < w &&
+             screenY >= 0 && screenY < h) {
+            // Make a note if we have have evidence that a sphere is *not*
+            // in collision.
+            float observedDepth = *(dmap+screenY*w+screenX);
+            
+            // FIXME: This is the test we want to do...
+            //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
+            // But since we want to declare "no information" as a good
+            // thing for testing purposes...
+            if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
+              (*possibleCollision)[sphereIndex] = false;
+          }
         }
       }
-      // Iterate through the child spheres
-      if(i == sz) break;
-      spherePt = modelToCamera(j->points[i]);
-    }
-*/
-    btVector3 spherePt;
-    for(int i = 0; i < j->points.size(); i++) {
-      spherePt = modelToCamera(j->points[i]);
-      sphereIndex++;
-      btVector3 camSpace = depthTrans(spherePt);
-
-      camSpace.setZ(-camSpace.getZ());
-      // Can't say anything about a sphere behind the camera
-      if(camSpace.z() - sphereRadius >= 0) {
-        const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
-        const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
-
-        if(screenX >= 0 && screenX < w &&
-           screenY >= 0 && screenY < h) {
-          // Make a note if we have have evidence that a sphere is *not*
-          // in collision.
-          float observedDepth = *(dmap+screenY*w+screenX);
-
-          // FIXME: This is the test we want to do...
-          //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
-          // But since we want to declare "no information" as a good
-          // thing for testing purposes...
-          if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
-            (*possibleCollision)[sphereIndex] = false;
-        }
-      }
-      // // Iterate through the child spheres
-      // if(i == sz) break;
-      // spherePt = modelToCamera(j->points[i]);
     }
 
     for(ModelTree::child_iterator it = child->begin(); 
@@ -283,6 +264,122 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
   //   t[i].join();
   // }
   // delete [] t;
+}
+
+/*
+ * std::vector<double> &langles - 7 joint angles for the left
+ * arm. {l_shoulder_pan_joint, l_shoulder_lift_joint,
+ * l_upper_arm_roll_joint, l_elbow_flex_joint, l_forearm_roll_joint,
+ * l_wrist_flex_joint, l_wrist_roll_joint}
+
+ * std::vector<double> &rangles - 7 joint angles for the right
+ * arm. {r_shoulder_pan_joint, r_shoulder_lift_joint,
+ * r_upper_arm_roll_joint, r_elbow_flex_joint, r_forearm_roll_joint,
+ * r_wrist_flex_joint, r_wrist_roll_joint}
+
+ * BodyPose &pose - This is the position of the base in the map frame
+ * and the torso height. This is a struct that you should include in
+ * your own ROS package. I attached the file here.  
+
+ * bool verbose - enables debug output unsigned char &dist - this is
+ * the distance from the nearest obstacle in cells. you can ignore
+ * this.
+
+ * int &debug_code - I have error codes for debugging purposes. For
+ * the sake of time - you can ignore them too.  
+
+ * returns a bool - this is the money bool
+ */
+bool CollisionChecker::checkCollision(vector<double> &langles, 
+                                      vector<double> &rangles, 
+                                      BodyPose &pose, 
+                                      bool verbose, 
+                                      unsigned char &dist, 
+                                      int &debug_code) {
+  static vector<float> jointAngles(this->numJoints);
+  static vector<bool> collisions;
+
+  // Joint angle remapping
+  for(int i = 0; i < 7; i++) {
+    jointAngles[langleRemap[i]] = langles[i];
+  }
+
+  for(int i = 0; i < 7; i++) {
+    jointAngles[rangleRemap[i]] = rangles[i];
+  }
+
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,1,0), pose.theta),
+                                       btVector3(pose.x, pose.y, pose.z));
+  getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, jointAngles, collisions);
+  for(int i = 0; i < collisions.size(); i++) 
+    if(collisions[i]) return false;
+  return true;
+}
+
+void CollisionChecker::getCollisionSpheres(vector<double>& langles,
+                                           vector<double>& rangles,
+                                           BodyPose& pose,
+                                           string group_name,
+                                           vector<vector<double> >& spheres) {
+  static vector<float> jointAngles(this->numJoints);
+  static vector<bool> collisions;
+
+  int oldSize = spheres.size();
+  spheres.resize(this->numSpheres);
+  for(int i = oldSize; i < this->numSpheres; i++) {
+    spheres[i].resize(4);
+  }
+
+  // Joint angle remapping
+  for(int i = 0; i < 7; i++) {
+    jointAngles[langleRemap[i]] = langles[i];
+  }
+
+  for(int i = 0; i < 7; i++) {
+    jointAngles[rangleRemap[i]] = rangles[i];
+  }
+
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,1,0), pose.theta),
+                                       btVector3(pose.x, pose.y, pose.z));
+
+  // Model tree traversal is copied from checkMap
+  static vector<pair<btTransform, const ModelTree*> > q;
+  q.clear();
+  q.push_back(make_pair(btTransform::getIdentity(), models[0]));
+  int sphereIndex = -1;
+  int jointIndex = 0;
+  int qHead = 0;
+  int qRemaining = 1;
+  while(qRemaining) {
+    btTransform t = q[qHead].first;
+    const ModelTree* child = q[qHead].second;
+    qHead++;
+    qRemaining--;
+    const float angle = jointAngles[jointIndex++];
+    const Joint* const j = child->curr;
+    
+    if(angle != 0)
+      t = t * btTransform(btQuaternion(j->axis, angle), j->trans.getOrigin());
+    else 
+      t = t * j->trans;
+
+    const btTransform modelToCamera = robotFrame * t;
+    for(int i = 0; i < j->points.size(); i++) {
+      const btVector3 spherePt = modelToCamera(j->points[i]);
+      sphereIndex++;
+      vector<double>& sphereVector = spheres[sphereIndex];
+      sphereVector[0] = spherePt.x();
+      sphereVector[1] = spherePt.y();
+      sphereVector[2] = spherePt.z();
+      sphereVector[3] = j->radius;
+    }
+
+    for(ModelTree::child_iterator it = child->begin(); 
+        it != child->end(); it++) {
+      q.push_back(make_pair(t, *it));
+      qRemaining++;
+    }
+  }
 }
 
 void CollisionChecker::getCollisionInfoReference(const btTransform& camera,
