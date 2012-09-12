@@ -324,7 +324,7 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
   }
 
   //cout << "Setting up robotFrame" << endl;
-  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,1,0), pose.theta),
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), pose.theta),
                                        btVector3(pose.x, pose.y, pose.z));
   getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, jointAngles, collisions);
   for(int i = 0; i < collisions.size(); i++) 
@@ -355,7 +355,7 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
     jointAngles[rangleRemap[i]] = rangles[i];
   }
 
-  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,1,0), pose.theta),
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), pose.theta),
                                        btVector3(pose.x, pose.y, pose.z));
 
   // Model tree traversal is copied from checkMap
