@@ -8,7 +8,7 @@ CFLAGS += -Iinclude $(shell pkg-config --cflags bullet)\
 
 LIBS += $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
  $(shell pkg-config --libs SDL_gfx)\
- $(shell pkf-config --libs tinyxml)
+ $(shell pkg-config --libs tinyxml)
 
 # Same as LIBS, but without the tinyxml dependency.
 MACLIBS = $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
@@ -19,7 +19,7 @@ OBJS = SDLBackend.o Model.o HeatPalette.o DepthMap.o StlFile.o\
  PathHelper.o
 
 all:	src/main.cpp ${OBJS}
-	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGLEW -lGL -g -ltinyxml
+	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGL -g -ltinyxml
 
 # Remove the DAE constant definition from CFLAGS
 mac: CFLAGS:=$(subst -DDAE,,$(CFLAGS)) -DMAC
