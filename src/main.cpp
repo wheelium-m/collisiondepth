@@ -12,10 +12,10 @@ extern btTransform parsePose(const char*);
 // camera pose from which the view was captured) for the collision
 // environment under consideration.
 void loadEnvironment(Renderer& renderer) {
-  renderer.addDepthMap("etc/depths1.bin", "etc/depths1pose.txt");
-  renderer.addDepthMap("etc/depths2.bin", "etc/depths2pose.txt");
-  renderer.addDepthMap("etc/depths3.bin", "etc/depths3pose.txt");
-  renderer.addDepthMap("etc/depths4.bin", "etc/depths4pose.txt");
+  // renderer.addDepthMap("etc/depths1.bin", "etc/depths1pose.txt");
+  // renderer.addDepthMap("etc/depths2.bin", "etc/depths2pose.txt");
+  // renderer.addDepthMap("etc/depths3.bin", "etc/depths3pose.txt");
+  // renderer.addDepthMap("etc/depths4.bin", "etc/depths4pose.txt");
 }
 
 /* Runs the application loop. */

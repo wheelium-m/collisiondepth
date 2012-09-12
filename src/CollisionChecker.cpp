@@ -3,10 +3,13 @@
 #include <map>
 #include <sstream>
 #include <iostream>
+#include "PathHelper.h"
+#include <dirent.h>
 
 // #ifdef MAC
 // #include <thread>
 // #endif
+#define FOCAL_LENGTH 320.0
 
 using namespace std;
 
@@ -379,6 +382,53 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
       q.push_back(make_pair(t, *it));
       qRemaining++;
     }
+  }
+}
+
+extern btTransform parsePose(const char* filename);
+
+// Convenience intialization for the Levine Hall data set
+void CollisionChecker::levineInit() {
+  DIR *dp;
+  struct dirent *dirp;
+  string depthMapDir("etc/levine/");
+  makePath(depthMapDir);
+  if((dp = opendir(depthMapDir.c_str())) == NULL) {
+    cout << "ERROR OPENING DEPTH MAP DIRECTORY" << endl;
+    exit(-1);
+  }
+  vector<string> imgFiles;
+  vector<string> poseFiles;
+  while((dirp=readdir(dp)) != NULL) {
+    string fname(dirp->d_name);
+    if(fname.find(".bin") != string::npos) imgFiles.push_back(fname);
+    else if(fname.find("pose.txt") != string::npos) poseFiles.push_back(fname);
+  }
+  if(imgFiles.size() != poseFiles.size()) {
+    cout << "Didn't find matching number of depth images and poses" << endl;
+    exit(-1);
+  }
+  for(int i = 0; i < imgFiles.size(); i++) {
+    imgFiles[i].insert(0, depthMapDir);
+    makePath(imgFiles[i]);
+    poseFiles[i].insert(0, depthMapDir);
+    makePath(poseFiles[i]);
+  }
+  // const char* dmaps[] = {"etc/depths1.bin", "etc/depths1pose.txt",
+  //                        "etc/depths2.bin", "etc/depths2pose.txt",
+  //                        "etc/depths3.bin", "etc/depths3pose.txt",
+  //                        "etc/depths4.bin", "etc/depths4pose.txt"};
+  for(int i = 0; i < imgFiles.size(); i++) {
+    DepthMap* depth = new DepthMap();
+    depth->depthID = this->numDepthMaps();
+    depth->getKinectMapFromFile(FOCAL_LENGTH, imgFiles[i].c_str());
+    
+    btTransform t = parsePose(poseFiles[i].c_str());
+    depth->trans = btTransform(t.getRotation(),
+                               btTransform(t.getRotation())(-1 * t.getOrigin()));
+    depth->transInv = depth->trans.inverse();
+    depth->addDilation(SPHERE_RADIUS*MODEL_SCALE);
+    addDepthMap(depth);
   }
 }
 

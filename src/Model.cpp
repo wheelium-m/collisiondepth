@@ -6,6 +6,7 @@
 #include <queue>
 #include <algorithm>
 #include "CollisionModel.h"
+#include "PathHelper.h"
 
 using namespace std;
 
@@ -146,9 +147,12 @@ void addCollisionSpheres(ModelTree* t) {
 
 ModelTree* initPR2() {
 #ifdef DAE
-  ModelTree* t = readDump("UrdfDumper/etc/newpr2.txt");
+  ModelTree* t = readDump("${PROJECT_ROOT}/UrdfDumper/etc/newpr2.txt");
 #else
-  ModelTree* t = readDump("UrdfDumper/etc/something.txt");
+  string filename("UrdfDumper/etc/something.txt");
+  makePath(filename);
+  //ModelTree* t = readDump("UrdfDumper/etc/something.txt");
+  ModelTree* t = readDump(filename.c_str());
   //ModelTree* t = readDump("UrdfDumper/etc/pr2.txt");
 #endif
   

@@ -45,6 +45,7 @@ void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
 SDLBackend::SDLBackend() : m_display(NULL) {
   cout << "SDLBackend constructor" << endl;
   checker = new CollisionChecker(&pr2());
+  checker->levineInit();
 }
 
 /* Cleanup SDL. */

@@ -47,5 +47,6 @@ public:
                            BodyPose &pose,
                            std::string group_name,
                            std::vector<std::vector<double> > &spheres);
+  void levineInit();
 };
 #endif
