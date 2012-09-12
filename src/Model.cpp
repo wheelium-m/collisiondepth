@@ -122,7 +122,9 @@ void makeSpheres(ModelTree *t) {
 
 // Add spheres from Ben Cohen's PR2 YAML body file
 void addCollisionSpheres(ModelTree* t) {
-  CollisionGeometry* cg = pr2CollisionGeometry("BenYaml/etc/pr2_body.txt");
+  string yamlFile("BenYaml/etc/pr2_body.txt");
+  makePath(yamlFile);
+  CollisionGeometry* cg = pr2CollisionGeometry(yamlFile.c_str());
   queue<ModelTree*> q;
   q.push(t);
   while(!q.empty()) {
