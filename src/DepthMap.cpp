@@ -5,6 +5,9 @@
 #include <sys/time.h>
 using namespace std;
 
+std::vector<float> DepthMap::dilationCache;
+int DepthMap::dilationCacheStride;
+
 void DepthMap::setRawMap(float* map) {
   map_it it = dilatedMaps.find(0);
   if(it != dilatedMaps.end()) delete (*it).second;
@@ -50,7 +53,11 @@ void DepthMap::addDilation(const float r) {
   if(it != dilatedMaps.end()) delete (*it).second;
   struct timeval start, stop;
   gettimeofday(&start,NULL);
+  // Denormalize dilation cache
+  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] *= r;
   dilatedMaps[r] = bloomDepths2(dilatedMaps[0], r);
+  // Renormalize dilation cache
+  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] /= r;
   gettimeofday(&stop,NULL);
   float seconds = (stop.tv_sec - start.tv_sec) + 0.000001f * (float)(stop.tv_usec - start.tv_usec);
   cout << "Dilation took " << seconds*1000.0f << "ms" << endl;
@@ -79,9 +86,6 @@ void DepthMap::initCache(int r) {
 // recomputing the depth for each pixel in each sphere rendering.
 float* DepthMap::bloomDepths2(const float* old,
                               const float r) {
-  // Denormalize the dilation cache
-  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] *= r;
-
   float* dilated = new float[width*height];
   memset((uint8_t*)dilated, 0, sizeof(float)*width*height);
   const float rFocalLength = focalLength * r;
@@ -123,9 +127,6 @@ float* DepthMap::bloomDepths2(const float* old,
       }
     }
   }
-  // Renormalize the dilation cache
-  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] /= r;
-
   return dilated;
 }
 

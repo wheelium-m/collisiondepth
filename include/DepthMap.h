@@ -23,9 +23,9 @@ private:
 
   // We cache a normalized high resolution sphere rendering to use as
   // a reference during dilation.
-  std::vector<float> dilationCache;
-  int dilationCacheStride;
   void initCache(int r);
+  static std::vector<float> dilationCache;
+  static int dilationCacheStride;
 
 public:
   int width, height, focalLength;
@@ -38,14 +38,14 @@ public:
   DepthMap() 
     : dilatedMaps(std::map<float,float*>()), width(0), height(0), 
     trans(btTransform::getIdentity()), transInv(btTransform::getIdentity()) {
-    initCache(64);
+    if(dilationCache.size() == 0) initCache(64);
   };
   /* DepthMap(int x, int y, float * m, btTransform t) */
   /*   : width(x), height(y), map(m), trans(t) {}; */
   DepthMap(const DepthMap &d)
     : dilatedMaps(d.dilatedMaps), width(d.width), height(d.height), 
     trans(d.trans), transInv(d.transInv) {
-    initCache(64);
+    if(dilationCache.size() == 0) initCache(64);
   };
 
   // Returns true if there is a collision; false otherwise.
