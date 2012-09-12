@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
+#include <sys/time.h>
 using namespace std;
 
 void DepthMap::setRawMap(float* map) {
@@ -47,7 +48,85 @@ void DepthMap::getKinectMapFromFile(const float focalLength, const char * filena
 void DepthMap::addDilation(const float r) {
   map_it it = dilatedMaps.find(r);
   if(it != dilatedMaps.end()) delete (*it).second;
-  dilatedMaps[r] = bloomDepths(dilatedMaps[0], r);
+  struct timeval start, stop;
+  gettimeofday(&start,NULL);
+  dilatedMaps[r] = bloomDepths2(dilatedMaps[0], r);
+  gettimeofday(&stop,NULL);
+  float seconds = (stop.tv_sec - start.tv_sec) + 0.000001f * (float)(stop.tv_usec - start.tv_usec);
+  cout << "Dilation took " << seconds*1000.0f << "ms" << endl;
+}
+
+void DepthMap::initCache(int r) {
+  dilationCache.resize(r*r*4);
+  dilationCacheStride = 2*r;
+  const int stride = r*2;
+  const int rsq = r*r;
+  const float ir = 1.0f / (float)r;
+  for(int y = 0; y < stride; y++) {
+    const int ysq = (y-r)*(y-r);
+    const int tmp = rsq - ysq;
+    const int bound = (int)sqrt(tmp);
+    const int offset = y*stride+r;
+    for(int x = -bound; x < bound; x++) {
+      dilationCache[offset+x] = sqrt(tmp - x*x) * ir;
+    }
+  }
+}
+
+// This version of the depth map dilation technique more properly
+// implements the idea of a sphere centered at an observed point. It
+// makes use of a cached rendering of a unit sphere to avoid
+// recomputing the depth for each pixel in each sphere rendering.
+float* DepthMap::bloomDepths2(const float* old,
+                              const float r) {
+  // Denormalize the dilation cache
+  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] *= r;
+
+  float* dilated = new float[width*height];
+  memset((uint8_t*)dilated, 0, sizeof(float)*width*height);
+  const float rFocalLength = focalLength * r;
+  const float stridef = (float)dilationCacheStride;
+  for(int y = 0; y < height; y++) {
+    for(int x = 0; x < width; x++, old++) {
+      float dist = *old;
+      // Don't splat unknown points or those very close to the camera.
+      if(dist < 0.2f) continue;
+      const int pr = (int)(rFocalLength / dist); // Pixel radius
+      int w = pr*2; // width of this sphere rendering
+      float step = stridef / (float)w;
+      int rowOffset = (y - pr) * width;
+      const int prsq = pr*pr;
+      float iy = 0.0f;
+      for(int cy = 0; cy < w; cy++, rowOffset += width, iy += step) {
+        const int yTmp = cy - pr;
+        if(y + yTmp >= height) break;
+        if(y + yTmp < 0) continue;
+        
+        const int rowBound = (int)sqrt(prsq - yTmp*yTmp);
+        int left = -rowBound;
+        if(left + x >= width) continue;
+        if(left + x < 0) left = -x;
+
+        int right = rowBound;
+        if(right + x < 0) continue;
+        if(right + x >= width) right = width - 1 - x;
+
+        int offset = left+x+rowOffset;
+        int stopcol = right+x+rowOffset;
+        float i = (int)iy*dilationCacheStride + (float)(left + pr)*step;
+        //for(int cx = left; cx < right; cx++, i += step, offset++) {
+        for(; offset < stopcol; i += step, offset++) {
+          const float dnew = dist - dilationCache[(int)i];//*r;
+          const float dilatedDepth = dilated[offset];
+          if(dilatedDepth == 0 || dnew < dilatedDepth) dilated[offset] = dnew;
+        }
+      }
+    }
+  }
+  // Renormalize the dilation cache
+  for(int i = 0; i < dilationCache.size(); i++) dilationCache[i] /= r;
+
+  return dilated;
 }
 
 // We want focalLength in pixels, and sphere radius in meters.
@@ -99,16 +178,5 @@ float* DepthMap::bloomDepths(const float* old,
       }
     }
   }
-/*
-  // Finish with a cleanup pass that sets 0-depth points to "infinite"
-  // depth. This is to avoid holes in the depthmap from creating
-  // collisions. FIXME: this is not conservative at all!
-  float *p = dilated;
-  for(int y = 0; y < height; y++) {
-    for(int x = 0; x < width; x++, p++) {
-      if(*p == 0.0f) *p = 10.0f;
-    }
-  }
-*/
   return dilated;
 }

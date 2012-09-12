@@ -2,6 +2,7 @@
 #define DEPTHMAP_H
 #include <btBulletDynamicsCommon.h>
 #include <map>
+#include <vector>
 /* #include <stdlib.h> */
 /* #include <unistd.h> */
 /* #include <iostream> */
@@ -18,9 +19,17 @@ private:
   typedef std::map<float,float*>::const_iterator map_it;
   void setRawMap(float*);
   float* bloomDepths(const float* map, const float r);
+  float* bloomDepths2(const float* map, const float r);
+
+  // We cache a normalized high resolution sphere rendering to use as
+  // a reference during dilation.
+  std::vector<float> dilationCache;
+  int dilationCacheStride;
+  void initCache(int r);
 
 public:
   int width, height, focalLength;
+
   int depthID;
 
   /* Specifies the camera transformation. */
@@ -28,12 +37,16 @@ public:
   btTransform transInv;
   DepthMap() 
     : dilatedMaps(std::map<float,float*>()), width(0), height(0), 
-    trans(btTransform::getIdentity()), transInv(btTransform::getIdentity()) {};
+    trans(btTransform::getIdentity()), transInv(btTransform::getIdentity()) {
+    initCache(64);
+  };
   /* DepthMap(int x, int y, float * m, btTransform t) */
   /*   : width(x), height(y), map(m), trans(t) {}; */
   DepthMap(const DepthMap &d)
     : dilatedMaps(d.dilatedMaps), width(d.width), height(d.height), 
-    trans(d.trans), transInv(d.transInv) {};
+    trans(d.trans), transInv(d.transInv) {
+    initCache(64);
+  };
 
   // Returns true if there is a collision; false otherwise.
   

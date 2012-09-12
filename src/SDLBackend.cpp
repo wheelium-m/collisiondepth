@@ -350,6 +350,7 @@ bool SDLBackend::loop(btTransform& robotFrame) {
   } else {
     cout << "Poses were collision checked in a single view " << (float)oneViewNeeded / (float)(oneViewNeeded+multipleViewsNeeded) << "% of the time." << endl;
   }
+  ///
 
   while (SDL_PollEvent(&keyevent))   //Poll our SDL key event for any keystrokes.
     {
