@@ -1,6 +1,6 @@
 #ifndef YMCA_H
 #define YMCA_H
-
+#include <string>
 #include "ScriptedMotion.h"
 
 class YMCA : public ScriptedMotion {

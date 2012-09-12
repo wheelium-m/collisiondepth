@@ -1,5 +1,4 @@
 #include "YMCA.h"
-#include <string>
 
 #define DEG2RAD(x) ((x) * (PI / 180))
 #define PI 3.1415926535
