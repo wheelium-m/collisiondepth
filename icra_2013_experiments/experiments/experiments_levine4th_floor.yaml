@@ -1,0 +1,11 @@
+experiments:
+
+  - name: icra_01
+    goal: hallway_01
+  - name: icra_02
+    goal: planlab_01
+  - name: icra_03
+    goal: hallway_02
+  - name: icra_04
+    goal: planlab_02
+
