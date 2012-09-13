@@ -3,15 +3,18 @@ import Blaze.ByteString.Builder
 import Control.Applicative
 import Data.ByteString (ByteString, hPut)
 import qualified Data.ByteString.Char8 as B
-import Data.List (intersperse, foldl')
+import Data.List (intersperse, foldl', find)
 import qualified Data.Map as M
+import Data.Maybe (mapMaybe)
 import Data.Monoid
+import qualified Data.Traversable as T
 import Data.Yaml.YamlLight hiding (parseYamlFile)
 import Data.Yaml.Syck
 import System.IO (openFile, IOMode(..), hClose)
 
 testFile :: FilePath
-testFile = "etc/pr2_body.yaml"
+--testFile = "etc/pr2_body.yaml"
+testFile = "../icra_2013_experiments/config/pr2_body_10cm.yaml"
 
 data Group = Group { name    :: ByteString
                    , frame   :: ByteString
@@ -25,8 +28,8 @@ data Sphere = Sphere { x        :: ByteString
                      , priority :: ByteString }
               deriving Show
 
-getSpheres :: YamlLight -> Group -> Maybe [Sphere]
-getSpheres yml g = mapM aux (spheres g)
+getSpheres :: YamlLight -> Group -> [Sphere]
+getSpheres yml g = mapMaybe aux (spheres g)
   where aux k = lookupYL (YStr k) yml >>= parseSphere
 
 parseSphere :: YamlLight -> Maybe Sphere
@@ -44,10 +47,17 @@ parseGroup yml = Group <$> (get "name" >>= unStr)
   where get k = lookupYL (YStr k) yml
 
 dumpGroup :: YamlLight -> Group -> Builder
-dumpGroup yml g = mconcat $ intersperse (fromByteString " ") 
-                  (fromByteString (frame g) : sphereDump)
-  where sphereDump = maybe [] (concatMap dumpSphere) (getSpheres yml g)
-        dumpSphere s = map fromByteString ["(", x s, y s, z s, radius s, ")"]
+-- dumpGroup yml g = mconcat $ fromByteString (B.snoc (frame g) ' ') : sphereDump
+--   where sphereDump = maybe [] (concatMap dumpSphere) (getSpheres yml g)
+--         dumpSphere s = map fromByteString ["(", x s, " ", y s, " ", z s, " ", radius s, ") "]
+dumpGroup yml g = mconcat . intersperse (fromByteString "\n") $ 
+                  fromByteString (B.snoc (frame g) ' ' <> n) : sphereDump
+  where sphereDump = map dumpSphere $ getSpheres yml g
+        dumpSphere :: Sphere -> Builder
+        dumpSphere s = mconcat $ 
+                       map fromByteString ["(", x s, " ", y s, " ", z s, " ", radius s, ")"]
+        n = B.pack . show . length . spheres $ g
+
 
 mergeCoincidentGroups :: [Group] -> [Group]
 mergeCoincidentGroups = map snd . M.toList . foldl' aux mempty . map (\g -> (frame g, g))
@@ -62,5 +72,9 @@ main = do yml <- fromYamlNode <$> parseYamlFile testFile
           h <- openFile "etc/pr2_body.txt" WriteMode
           mapM_ (toByteStringIO (hPut h) . (<> fromByteString "\n") . dumpGroup yml)
                 groups
-          print groups
+          mapM_ (\g -> putStrLn $ B.unpack (name g) ++
+                                  "("++B.unpack (frame g)++"): "++
+                                  show (length (spheres g))) 
+                groups
+          T.traverse (print . spheres) $ find ((== "base_link") . frame) groups
           hClose h

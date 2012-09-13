@@ -8,7 +8,7 @@
 using namespace std;
 
 istream& operator >>(istream& ins, CollisionSphere& c) {
-  ins.ignore(2);
+  ins.ignore(1);
   ins >> c.x;
   ins.ignore(1);
   ins >> c.y;
@@ -16,7 +16,7 @@ istream& operator >>(istream& ins, CollisionSphere& c) {
   ins >> c.z;
   ins.ignore(1);
   ins >> c.r;
-  ins.ignore(2);
+  ins.ignore(1);
   return ins;
 }
 
@@ -39,12 +39,21 @@ CollisionGeometry* pr2CollisionGeometry(const char* filename) {
     size_t i = s.find(" ");
     const string name = s.substr(0,i);
     s = s.substr(i+1);
-    stringstream sstream(s);
-    while(!sstream.eof()) {
+    int n;
+    stringstream(s) >> n;
+    for(; n > 0; n--) {
+      getline(f,s);
+      stringstream sstream(s);
       CollisionSphere c;
       sstream >> c;
       (*m)[name].push_back(c);
     }
+    // stringstream sstream(s);
+    // while(!sstream.eof()) {
+    //   CollisionSphere c;
+    //   sstream >> c;
+    //   (*m)[name].push_back(c);
+    // }
   }
   return m;
 }
