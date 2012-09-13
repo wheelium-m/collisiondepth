@@ -6,7 +6,7 @@
 #include <vector>
 #include "StlFile.h"
 
-#define SPHERE_RADIUS 0.2
+#define SPHERE_RADIUS 0.1
 //#define MODEL_SCALE 0.5
 #define MODEL_SCALE 1.0
 

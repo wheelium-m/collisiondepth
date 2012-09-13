@@ -23,8 +23,8 @@ using namespace std;
 // with a focal length of 1.0.
 #define FOCAL_LENGTH 320.0
 #define FOCAL_LENGTH_X 320.0
-//#define FOCAL_LENGTH_Y 240.0
-#define FOCAL_LENGTH_Y 320.0
+#define FOCAL_LENGTH_Y 240.0
+// #define FOCAL_LENGTH_Y 320.0
 
 #define PI 3.1415926535
 
