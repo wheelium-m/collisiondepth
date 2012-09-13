@@ -11,7 +11,7 @@ groups:
     spheres: s1 s2 s3 s4 s18 s19
   - name: torso_lower
     frame: base_link
-    spheres: s13 s14 s15 s16 s17
+    spheres: tl1 tl2 tl3 tl4 tl5 tl6 tl7 tl8 tl9 tl10 tl11 tl12 tl13 tl14 tl15  #s13 s14 s15 s16 s17
   - name: tilt_laser
     frame: torso_lift_link
     spheres: s7 s8 s11 s12
@@ -127,3 +127,19 @@ t9: {x: -0.00, y: 0.15, z: -0.35, radius: 0.1, priority: 1}
 t10: {x: -0.00, y: -0.15, z: -0.25, radius: 0.1, priority: 1}
 t11: {x: -0.00, y: 0.15, z: -0.25, radius: 0.1, priority: 1}
 
+# Torso Lower
+tl1:  {x: -0.20, y: -0.2, z: 0.34, radius: 0.1, priority: 1}
+tl2:  {x: -0.20, y: -0.1, z: 0.34, radius: 0.1, priority: 1}
+tl3:  {x: -0.20, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
+tl4:  {x: -0.20, y: 0.1, z: 0.34, radius: 0.1, priority: 1}
+tl5:  {x: -0.20, y: 0.2, z: 0.34, radius: 0.1, priority: 1}
+tl6:  {x: -0.20, y: -0.2, z: 0.44, radius: 0.1, priority: 1}
+tl7:  {x: -0.20, y: -0.1, z: 0.44, radius: 0.1, priority: 1}
+tl8:  {x: -0.20, y: 0.0, z: 0.44, radius: 0.1, priority: 1}
+tl9:  {x: -0.20, y: 0.1, z: 0.44, radius: 0.1, priority: 1}
+tl10: {x: -0.20, y: 0.2, z: 0.44, radius: 0.1, priority: 1}
+tl11: {x: -0.20, y: -0.2, z: 0.34, radius: 0.1, priority: 1}
+tl12: {x: -0.20, y: -0.1, z: 0.34, radius: 0.1, priority: 1}
+tl13: {x: -0.20, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
+tl14: {x: -0.20, y: 0.1, z: 0.34, radius: 0.1, priority: 1}
+tl15: {x: -0.20, y: 0.2, z: 0.34, radius: 0.1, priority: 1}
