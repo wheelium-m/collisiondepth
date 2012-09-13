@@ -504,3 +504,24 @@ bool CollisionChecker::isColliding(const btTransform& camera,
     if(collisions[i]) return true;
   return false;
 }
+
+// Return a vector of camera boses. The vector is n*7 elements long,
+// where we represent each of n poses as translation and a rotation
+// quaternion. Translation is a 3D vector with {X,Y,Z} components, and
+// the quaternion is a 4D vector with {X,Y,Z,W} components.
+vector<float> CollisionChecker::getDepthPoses() {
+  vector<float> v(7*depthMaps.size());
+  for(int i = 0; i < depthMaps.size(); i++) {
+    const int o = i*7;
+    const btVector3 t = depthMaps[i]->trans.getOrigin();
+    const btQuaternion r = depthMaps[i]->trans.getRotation();
+    v[o] = t.x();
+    v[o+1] = t.y();
+    v[o+2] = t.z();
+    v[o+3] = r.x();
+    v[o+4] = r.y();
+    v[o+5] = r.z();
+    v[o+6] = r.w();
+  }
+  return v;
+}

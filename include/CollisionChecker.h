@@ -48,5 +48,6 @@ public:
                            std::string group_name,
                            std::vector<std::vector<double> > &spheres);
   void levineInit();
+  vector<float> getDepthPoses();
 };
 #endif
