@@ -249,6 +249,9 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
   // thread* t = new thread[depthMaps.size()];
   
   for(int i = 0; i < depthMaps.size(); i++) {
+    // Quick visibility feasibility test
+    btVector3 test = depthMaps[i]->trans(robotFrame.getOrigin());
+    if(test.z() > 0 || test.length2() > 100) continue;
 
     checkMap(i, models, &possibleCollision, depthMaps[i], robotFrame, 
             sphereRadius, jointAngles);
