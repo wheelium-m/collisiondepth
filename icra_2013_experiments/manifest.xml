@@ -14,6 +14,9 @@
   <depend package="sbpl_3dnav_planner"/>
   <depend package="pose_follower_3d"/>
   <depend package="state_transformer"/>
+  <depend package="pviz" />
+  <depend package="actionlib" />
+  <depend package="move_base_msgs" />
 
 </package>
 
