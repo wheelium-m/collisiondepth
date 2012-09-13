@@ -8,10 +8,10 @@ groups:
     spheres: b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 b16 b17 b18 b19 b20 b21 b22 b23 b24 b25 b26 b27 b28 b29 b30 b31 b32 b33 b34 b35 b36 b37 b38 b39 b40 b41 b42 b43 b44 b45 b46
   - name: torso_upper
     frame: torso_lift_link
-    spheres: s1 s2 s3 s4 s18 s19
+    spheres: tu1 tu2 tu3 tu4 tu5 tu6 tu7 tu8 tu9 tu10 tu11 tu12 tu13 tu14 tu15 tu16 tu17 tu18 tu19 tu20 tu21 tu22 tu23 tu24 tu_vent1 tu_vent2 tu_vent3
   - name: torso_lower
     frame: base_link
-    spheres: tl1 tl2 tl3 tl4 tl5 tl6 tl7 tl8 tl9 tl10 tl11 tl12 tl13 tl14 tl15  #s13 s14 s15 s16 s17
+    spheres: tl1 tl2 tl3 tl4 tl5 tl6 tl7 tl8 tl9 tl10 tl11 tl12 tl13 tl14 tl15
   - name: tilt_laser
     frame: torso_lift_link
     spheres: s7 s8 s11 s12
@@ -30,6 +30,18 @@ groups:
   - name: left_forearm
     frame: l_elbow_flex_link
     spheres: fa0 fa1
+  - name: right_upper_arm
+    frame: r_shoulder_lift_link
+    spheres: ua1 ua2 ua3 ua4
+  - name: left_upper_arm
+    frame: l_shoulder_lift_link
+    spheres: ua1 ua2 ua3 ua4
+  - name: right_forearm
+    frame: r_elbow_flex_link
+    spheres: ua1 ua2 ua3 ua4
+  - name: left_forearm
+    frame: l_elbow_flex_link
+    spheres: ua1 ua2 ua3 ua4
 
 # Base - Rear
 b1: {x: -0.26, y: -0.25, z: 0.2, radius: 0.1, priority: 1}
@@ -128,18 +140,53 @@ t10: {x: -0.00, y: -0.15, z: -0.25, radius: 0.1, priority: 1}
 t11: {x: -0.00, y: 0.15, z: -0.25, radius: 0.1, priority: 1}
 
 # Torso Lower
-tl1:  {x: -0.20, y: -0.2, z: 0.34, radius: 0.1, priority: 1}
-tl2:  {x: -0.20, y: -0.1, z: 0.34, radius: 0.1, priority: 1}
-tl3:  {x: -0.20, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
-tl4:  {x: -0.20, y: 0.1, z: 0.34, radius: 0.1, priority: 1}
-tl5:  {x: -0.20, y: 0.2, z: 0.34, radius: 0.1, priority: 1}
-tl6:  {x: -0.20, y: -0.2, z: 0.44, radius: 0.1, priority: 1}
-tl7:  {x: -0.20, y: -0.1, z: 0.44, radius: 0.1, priority: 1}
-tl8:  {x: -0.20, y: 0.0, z: 0.44, radius: 0.1, priority: 1}
-tl9:  {x: -0.20, y: 0.1, z: 0.44, radius: 0.1, priority: 1}
-tl10: {x: -0.20, y: 0.2, z: 0.44, radius: 0.1, priority: 1}
-tl11: {x: -0.20, y: -0.2, z: 0.34, radius: 0.1, priority: 1}
-tl12: {x: -0.20, y: -0.1, z: 0.34, radius: 0.1, priority: 1}
-tl13: {x: -0.20, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
-tl14: {x: -0.20, y: 0.1, z: 0.34, radius: 0.1, priority: 1}
-tl15: {x: -0.20, y: 0.2, z: 0.34, radius: 0.1, priority: 1}
+tl1:  {x: -0.25, y: -0.15, z: 0.34, radius: 0.1, priority: 1}
+tl2:  {x: -0.25, y: -0.05, z: 0.34, radius: 0.1, priority: 1}
+tl3:  {x: -0.25, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
+tl4:  {x: -0.25, y: 0.05, z: 0.34, radius: 0.1, priority: 1}
+tl5:  {x: -0.25, y: 0.15, z: 0.34, radius: 0.1, priority: 1}
+tl6:  {x: -0.25, y: -0.15, z: 0.44, radius: 0.1, priority: 1}
+tl7:  {x: -0.25, y: -0.05, z: 0.44, radius: 0.1, priority: 1}
+tl8:  {x: -0.25, y: 0.0, z: 0.44, radius: 0.1, priority: 1}
+tl9:  {x: -0.25, y: 0.05, z: 0.44, radius: 0.1, priority: 1}
+tl10: {x: -0.25, y: 0.15, z: 0.44, radius: 0.1, priority: 1}
+tl11: {x: -0.25, y: -0.15, z: 0.34, radius: 0.1, priority: 1}
+tl12: {x: -0.25, y: -0.05, z: 0.34, radius: 0.1, priority: 1}
+tl13: {x: -0.25, y: 0.0, z: 0.34, radius: 0.1, priority: 1}
+tl14: {x: -0.25, y: 0.05, z: 0.34, radius: 0.1, priority: 1}
+tl15: {x: -0.25, y: 0.15, z: 0.34, radius: 0.1, priority: 1}
+
+# Torso Upper
+tu1: {x: -0.21, y: -0.13, z: 0.18, radius: 0.1, priority: 1}
+tu2: {x: -0.21, y: -0.05, z: 0.18, radius: 0.1, priority: 1}
+tu3: {x: -0.21, y: 0.05, z: 0.18, radius: 0.1, priority: 1}
+tu4: {x: -0.21, y: 0.13, z: 0.18, radius: 0.1, priority: 1}
+tu5: {x: -0.21, y: -0.13, z: 0.08, radius: 0.1, priority: 1}
+tu6: {x: -0.21, y: -0.05, z: 0.08, radius: 0.1, priority: 1}
+tu7: {x: -0.21, y: 0.05, z: 0.08, radius: 0.1, priority: 1}
+tu8: {x: -0.21, y: 0.13, z: 0.08, radius: 0.1, priority: 1}
+tu9: {x: -0.21, y: -0.13, z: -0.02, radius: 0.1, priority: 1}
+tu10: {x: -0.21, y: -0.05, z: -0.02, radius: 0.1, priority: 1}
+tu11: {x: -0.21, y: 0.05, z: -0.02, radius: 0.1, priority: 1}
+tu12: {x: -0.21, y: 0.13, z: -0.02, radius: 0.1, priority: 1}
+tu13: {x: -0.21, y: -0.13, z: -0.12, radius: 0.1, priority: 1}
+tu14: {x: -0.21, y: -0.05, z: -0.12, radius: 0.1, priority: 1}
+tu15: {x: -0.21, y: 0.05, z: -0.12, radius: 0.1, priority: 1}
+tu16: {x: -0.21, y: 0.13, z: -0.12, radius: 0.1, priority: 1}
+tu17: {x: -0.21, y: -0.13, z: -0.22, radius: 0.1, priority: 1}
+tu18: {x: -0.21, y: -0.05, z: -0.22, radius: 0.1, priority: 1}
+tu19: {x: -0.21, y: 0.05, z: -0.22, radius: 0.1, priority: 1}
+tu20: {x: -0.21, y: 0.13, z: -0.22, radius: 0.1, priority: 1}
+tu21: {x: -0.21, y: -0.15, z: -0.32, radius: 0.1, priority: 1}
+tu22: {x: -0.21, y: -0.05, z: -0.32, radius: 0.1, priority: 1}
+tu23: {x: -0.21, y: 0.05, z: -0.32, radius: 0.1, priority: 1}
+tu24: {x: -0.21, y: 0.13, z: -0.32, radius: 0.1, priority: 1}
+tu_vent1: {x: -0.19, y: -0.07, z: 0.25, radius: 0.1, priority: 1}
+tu_vent2: {x: -0.19, y: 0.0, z: 0.25, radius: 0.1, priority: 1}
+tu_vent3: {x: -0.19, y: 0.07, z: 0.25, radius: 0.1, priority: 1}
+
+# Upper Arm
+ua1: {x: 0.1, y: 0.00, z: 0.0, radius: 0.1, priority: 1}
+ua2: {x: 0.2, y: 0.00, z: 0.0, radius: 0.1, priority: 1}
+ua3: {x: 0.3, y: 0.00, z: 0.0, radius: 0.1, priority: 1}
+ua4: {x: 0.4, y: 0.00, z: 0.0, radius: 0.1, priority: 1}
