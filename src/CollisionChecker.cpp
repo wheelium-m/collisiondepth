@@ -177,6 +177,7 @@ void checkMap(const int threadId,
 
   int qHead = 0;
   int qRemaining = 1;
+  const btTransform robotToCamera = depthTrans * robotFrame;
   while(qRemaining) {
     btTransform t = q[qHead].first;
     const ModelTree* child = q[qHead].second;
@@ -194,11 +195,13 @@ void checkMap(const int threadId,
     //const int sz = j->points.size();
 
     if(j->points.size()) {
-      const btTransform modelToCamera = robotFrame * t;
+      //const btTransform modelToCamera = robotFrame * t;
+      const btTransform modelToCamera = robotToCamera * t;
       for(int i = 0; i < j->points.size(); i++) {
-        const btVector3 spherePt = modelToCamera(j->points[i]);
+        //const btVector3 spherePt = modelToCamera(j->points[i]);
         sphereIndex++;
-        btVector3 camSpace = depthTrans(spherePt);
+        //btVector3 camSpace = depthTrans(spherePt);
+        btVector3 camSpace = modelToCamera(j->points[i]);
         
         camSpace.setZ(-camSpace.getZ());
         // Can't say anything about a sphere behind the camera
