@@ -41,6 +41,8 @@ void go(Renderer& renderer) {
   btVector3 trans(13.614223,4.6128845,3.0635848);
   btTransform robotFrame = btTransform(rot,trans);
 
+  robotFrame = btTransform::getIdentity();
+
   while(renderer.loop(robotFrame)) {
     btVector3 t = robotFrame.getOrigin();
     cout << "Robot at (" << t.x() << ", " << t.y() << ", ";
