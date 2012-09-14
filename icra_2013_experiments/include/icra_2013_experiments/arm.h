@@ -26,7 +26,8 @@ class Arm
     bool sendArmToPose(double pose[], double move_time, bool constraint_aware);
     void sendArmToPoses(std::vector<std::vector<double> > &poses, std::vector<double> move_times);
 
-    void sendArmToConfiguration(double configuration[], double move_time);
+    //void sendArmToConfiguration(double configuration[], double move_time);
+    void sendArmToConfiguration(std::vector<double> &configuration, double move_time);
     void sendArmToConfigurations(std::vector<std::vector<double> > &configurations, std::vector<double> move_times);
 
     bool computeIK(const geometry_msgs::Pose &pose, std::vector<double> jnt_pos, std::vector<double> &solution);

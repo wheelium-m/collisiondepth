@@ -1,11 +1,28 @@
+configurations:
+
+  - name: arms_out
+    rangles: -0.200890 1.192362 0.000000 -0.975790 -2.527019 -0.164829 2.498734
+    langles:  2.135, 0.803, 1.732, -1.905, 2.369, -1.680, 1.398
+    torso: 0.21
+  - name: arms_up
+    rangles: -0.200890 1.192362 0.000000 -0.975790 -2.527019 -0.164829 2.498734
+    langles:  2.135, 0.803, 1.732, -1.905, 2.369, -1.680, 1.398
+    torso: 0.21
+
+
+
 experiments:
 
   - name: icra_01
+    start: arms_out
     goal: hallway_01
   - name: icra_02
+    start: arms_up
     goal: planlab_01
   - name: icra_03
     goal: hallway_02
+    start: arms_out
   - name: icra_04
+    start: arms_up
     goal: planlab_02
 

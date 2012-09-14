@@ -8,7 +8,7 @@ int main(int argc, char ** argv)
   if(!nt.getParams())
   {
     ROS_ERROR("Failed to get all required params from param server.");
-    return -1;
+    return 0;
   }
   nt.printLocations();
   nt.printExperiments();

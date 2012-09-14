@@ -1,4 +1,4 @@
-#include <simplecontrollers/arm.h>
+#include <icra_2013_experiments/arm.h>
 #include <pr2_controllers_msgs/JointTrajectoryControllerState.h>
 #include <time.h>
 
@@ -21,7 +21,7 @@ Arm::Arm(std::string arm_name) {
     joint_names_.push_back("l_wrist_roll_joint");
     traj_client_ = new TrajClient("l_arm_controller/joint_trajectory_action",
         true);
-  } else {
+  } else if(arm_name_.compare("right") == 0) {
     ik_service_name_ = "/pr2_right_arm_kinematics_sushi/get_ik";
     constraint_ik_service_name_ = "/pr2_right_arm_kinematics/get_constraint_aware_ik";
     joint_names_.push_back("r_shoulder_pan_joint");
@@ -34,6 +34,8 @@ Arm::Arm(std::string arm_name) {
     traj_client_ = new TrajClient("r_arm_controller/joint_trajectory_action",
         true);
   }
+  else
+    ROS_ERROR("[arm] Constructor expected 'left' or 'right'. '%s' is invalid. It won't work!", arm_name.c_str());
 
   while (!traj_client_->waitForServer(ros::Duration(5.0)))
     ROS_INFO("Waiting for the joint_trajectory_action server");
@@ -45,7 +47,8 @@ Arm::~Arm() {
   delete traj_client_;
 }
 
-void Arm::sendArmToConfiguration(double configuration[7], double move_time) {
+void Arm::sendArmToConfiguration(std::vector<double> &configuration, double move_time) {
+//void Arm::sendArmToConfiguration(double configuration[7], double move_time) {
   pr2_controllers_msgs::JointTrajectoryGoal goal;
 
   goal.trajectory.header.seq = 0;
@@ -180,7 +183,8 @@ bool Arm::sendArmToPose(double pose[6], double move_time) {
   for (int i = 0; i < 7; i++)
     configuration[i] = solution[i];
 
-  sendArmToConfiguration(configuration, move_time);
+  //sendArmToConfiguration(configuration, move_time);
+  sendArmToConfiguration(solution, move_time);
   return true;
 }
 
@@ -230,7 +234,8 @@ bool Arm::sendArmToPose(double pose[6], double move_time, bool constraint_aware)
   for (int i = 0; i < 7; i++)
     configuration[i] = solution[i];
 
-  sendArmToConfiguration(configuration, move_time);
+  //sendArmToConfiguration(configuration, move_time);
+  sendArmToConfiguration(solution, move_time);
   return true;
 }
 

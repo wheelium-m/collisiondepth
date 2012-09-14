@@ -12,6 +12,7 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <icra_2013_experiments/arm.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
@@ -26,7 +27,7 @@ typedef struct
 {
   std::string name;
   std::string goal;
-  RobotPose start;
+  std::string start;
 } Experiment;
 
 
@@ -35,18 +36,18 @@ class NavTests
   public:
 
     NavTests();
-    ~NavTests(){};
+    ~NavTests();
 
     bool getParams();
     bool getLocations();
     bool getExperiments();
-    
+    bool getConfigurations();
+
     void printLocations();
     void printExperiments();
 
     bool runTests();
-
-    void rpyToQuat(double roll, double pitch, double yaw, double &qx, double &qy, double &qz, double &qw);
+    bool goToRobotConfiguration(std::vector<double> &rangles, std::vector<double> &langles, double torso);
 
   private:
 
@@ -54,17 +55,22 @@ class NavTests
     ros::NodeHandle ph_;
 
     std::map<std::string, Experiment> exp_map_;
+    std::map<std::string, RobotPose> config_map_;
     std::map<std::string, std::vector<double> > loc_map_;
 
     tf::TransformListener tf_;
 
-    RobotPose start_pose_;
-    RobotPose current_pose_;
+    PViz pviz_;
+
+    Arm *larm_;
+    Arm *rarm_;
 
     MoveBaseClient *mbc_;
 
     bool sendNavGoal(std::string name);
     void getBasePose(double &x, double &y, double &theta, geometry_msgs::Quaternion &quat);
-  
+    void rpyToQuat(double roll, double pitch, double yaw, double &qx, double &qy, double &qz, double &qw); 
+    void printRobotPose(RobotPose &pose, std::string name);
+
 };
 
