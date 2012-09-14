@@ -413,8 +413,15 @@ void CollisionChecker::levineInit() {
   vector<string> poseFiles;
   while((dirp=readdir(dp)) != NULL) {
     string fname(dirp->d_name);
-    if(fname.find(".bin") != string::npos) imgFiles.push_back(string(fname));
-    else if(fname.find("pose.txt") != string::npos) poseFiles.push_back(string(fname));
+    if(fname.find(".bin") != string::npos) {
+      imgFiles.push_back(string(fname));
+      string pname(fname);
+      pname = pname.substr(0,pname.size()-4);
+      pname.append("pose.txt");
+      poseFiles.push_back(pname);
+    }
+    // else if(fname.find("pose.txt") != string::npos) 
+    //   poseFiles.push_back(string(fname));
   }
   if(imgFiles.size() != poseFiles.size()) {
     cout << "Didn't find matching number of depth images and poses" << endl;
