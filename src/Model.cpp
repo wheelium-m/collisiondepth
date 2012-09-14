@@ -121,8 +121,15 @@ void makeSpheres(ModelTree *t) {
 }
 
 // Add spheres from Ben Cohen's PR2 YAML body file
-void addCollisionSpheres(ModelTree* t) {
-  string yamlFile("BenYaml/etc/pr2_body.txt");
+void addCollisionSpheres(ModelTree* t, const int modelIndex) {
+  //string yamlFile("BenYaml/etc/pr2_body.txt");
+  string yamlFile;
+  switch(modelIndex) {
+  case 0: yamlFile = "BenYaml/etc/pr2_body.txt"; break;
+  case 1: yamlFile = "BenYaml/etc/pr2_body_1.txt"; break;
+  case 2: yamlFile = "BenYaml/etc/pr2_body_2.txt"; break;
+  case 3: yamlFile = "BenYaml/etc/pr2_body_3.txt"; break;
+  }
   makePath(yamlFile);
   CollisionGeometry* cg = pr2CollisionGeometry(yamlFile.c_str());
   queue<ModelTree*> q;
@@ -147,7 +154,7 @@ void addCollisionSpheres(ModelTree* t) {
   delete cg;
 }
 
-ModelTree* initPR2() {
+ModelTree* initPR2(const int modelIndex) {
 #ifdef DAE
   ModelTree* t = readDump("${PROJECT_ROOT}/UrdfDumper/etc/newpr2.txt");
 #else
@@ -159,12 +166,17 @@ ModelTree* initPR2() {
 #endif
   
   //makeSpheres(t);
-  addCollisionSpheres(t);
+  addCollisionSpheres(t, modelIndex);
   return t;
 }
 
 const ModelTree& pr2() {
-  static ModelTree* t = initPR2();
+  static ModelTree* t = initPR2(0);
+  return *t;
+}
+
+const ModelTree& pr2(const int modelIndex) {
+  static ModelTree* t = initPR2(modelIndex);
   return *t;
 }
 

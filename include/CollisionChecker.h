@@ -13,6 +13,11 @@ private:
   int numJoints;
   std::vector<int> langleRemap;
   std::vector<int> rangleRemap;
+
+  struct Stats {
+    int numChecks;
+    int numViews;
+  } stats;
 public:
   CollisionChecker(const ModelTree*);
   void addDepthMap(const DepthMap*);
@@ -49,5 +54,9 @@ public:
                            std::vector<std::vector<double> > &spheres);
   void levineInit();
   vector<float> getDepthPoses();
+
+  void resetStats();
+  void getStats(std::vector<std::string>& fieldNames, 
+                std::vector<double>& fieldValues);
 };
 #endif
