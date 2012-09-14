@@ -39,5 +39,7 @@ const uint8_t* buildPalette(int n) {
 const uint8_t* getColor(float x) {
   const int palSize = 256;
   static const uint8_t* pal = buildPalette(palSize);
-  return &pal[(int)(x*(float)(palSize - 1))*3];
+  static uint8_t whiteBG[3] = {255,255,255};
+  if(x == 0.0f) return whiteBG;
+  else return &pal[(int)(x*(float)(palSize - 1))*3];
 }
