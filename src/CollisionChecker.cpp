@@ -246,6 +246,9 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
     btVector3 test = depthMaps[i]->trans(robotFrame.getOrigin());
     if(test.z() > 0 || test.length2() > 100) continue;
 
+    // Tighter FOV test
+    //if(acos(btVector3(0,0,-1).dot(test) / test.length()) > 1.65) continue;
+
     checkMap(i, models, &possibleCollision, depthMaps[i], robotFrame, 
              sphereRadius, jointAngles);
 
