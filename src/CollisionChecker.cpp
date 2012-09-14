@@ -436,6 +436,8 @@ void CollisionChecker::levineInit() {
     depth->getKinectMapFromFile(FOCAL_LENGTH, imgFiles[i].c_str());
     
     btTransform t = parsePose(poseFiles[i].c_str());
+    depth->camOrigin = t.getOrigin();
+    depth->camOrientation = t.getRotation();
     depth->trans = btTransform(t.getRotation(),
                                btTransform(t.getRotation())(-1 * t.getOrigin()));
     depth->transInv = depth->trans.inverse();
@@ -506,8 +508,8 @@ vector<float> CollisionChecker::getDepthPoses() {
   vector<float> v(7*depthMaps.size());
   for(int i = 0; i < depthMaps.size(); i++) {
     const int o = i*7;
-    const btVector3 t = depthMaps[i]->trans.getOrigin();
-    const btQuaternion r = depthMaps[i]->trans.getRotation();
+    const btVector3 t = depthMaps[i]->camOrigin;
+    const btQuaternion r = depthMaps[i]->camOrientation;
     v[o] = t.x();
     v[o+1] = t.y();
     v[o+2] = t.z();

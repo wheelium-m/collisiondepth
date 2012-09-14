@@ -33,6 +33,8 @@ public:
   int depthID;
 
   /* Specifies the camera transformation. */
+  btVector3 camOrigin;
+  btQuaternion camOrientation;
   btTransform trans;
   btTransform transInv;
   DepthMap() 
