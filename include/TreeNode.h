@@ -18,6 +18,7 @@ public:
     return children.end();
   }
   typedef typename std::vector<TreeNode<T>*>::const_iterator child_iterator;
+  int numChildren() const { return children.size(); }
 };
 
 #endif

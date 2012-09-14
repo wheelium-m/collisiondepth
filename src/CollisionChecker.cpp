@@ -191,23 +191,16 @@ void checkMap(const int threadId,
     else 
       t = t * j->trans;
   
-    // Now check the child joint's spheres
-    //const int sz = j->points.size();
-
     if(j->points.size()) {
-      //const btTransform modelToCamera = robotFrame * t;
       const btTransform modelToCamera = robotToCamera * t;
       for(int i = 0; i < j->points.size(); i++) {
-        //const btVector3 spherePt = modelToCamera(j->points[i]);
         sphereIndex++;
-        //btVector3 camSpace = depthTrans(spherePt);
         btVector3 camSpace = modelToCamera(j->points[i]);
-        
-        camSpace.setZ(-camSpace.getZ());
         // Can't say anything about a sphere behind the camera
-        if(camSpace.z() - sphereRadius >= 0) {
-          const int screenX = (int)(camSpace.x() * focalLengthX / camSpace.z()) + halfW;
-          const int screenY = (int)(-camSpace.y() * focalLengthY / camSpace.z()) + halfH;
+        if(camSpace.z() + sphereRadius <= 0) {
+          const float invZ = -1.0f / camSpace.z();
+          const int screenX = (int)(camSpace.x() * focalLengthX * invZ) + halfW;
+          const int screenY = (int)(-camSpace.y() * focalLengthY * invZ) + halfH;
 
           if(screenX >= 0 && screenX < w &&
              screenY >= 0 && screenY < h) {
@@ -216,10 +209,10 @@ void checkMap(const int threadId,
             float observedDepth = *(dmap+screenY*w+screenX);
             
             // FIXME: This is the test we want to do...
-            //if(observedDepth && camSpace.z()+sphereRadius < observedDepth)
+            //if(observedDepth && sphereRadius - camSpace.z() < observedDepth)
             // But since we want to declare "no information" as a good
             // thing for testing purposes...
-            if(!observedDepth || camSpace.z()+sphereRadius < observedDepth)
+            if(!observedDepth || sphereRadius - camSpace.z() < observedDepth)
               (*possibleCollision)[sphereIndex] = false;
           }
         }
@@ -229,8 +222,8 @@ void checkMap(const int threadId,
     for(ModelTree::child_iterator it = child->begin(); 
         it != child->end(); it++) {
       q.push_back(make_pair(t, *it));
-      qRemaining++;
     }
+    qRemaining += child->numChildren();
   }
 }
 
@@ -254,7 +247,7 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
     if(test.z() > 0 || test.length2() > 100) continue;
 
     checkMap(i, models, &possibleCollision, depthMaps[i], robotFrame, 
-            sphereRadius, jointAngles);
+             sphereRadius, jointAngles);
 
     // Check if every sphere has been seen free of collision
     int j;
