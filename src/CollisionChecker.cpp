@@ -9,7 +9,12 @@
 // #ifdef MAC
 // #include <thread>
 // #endif
+
+#ifdef FISHEYE
+#define FOCAL_LENGTH 160.0
+#else
 #define FOCAL_LENGTH 320.0
+#endif
 
 using namespace std;
 
@@ -159,8 +164,15 @@ void checkMap(const int threadId,
   const int h = depth->height;
   const btTransform depthTrans = depth->trans;
   //const float focalLength = depth->focalLength;
+
+#ifdef FISHEYE
+  const float focalLengthX = 160.0f;
+  const float focalLengthY = 120.0f;
+#else
   const float focalLengthX = 320.0f;
   const float focalLengthY = 240.0f;
+#endif
+
   const int halfW = w / 2;
   const int halfH = h / 2;
 
@@ -406,7 +418,11 @@ extern btTransform parsePose(const char* filename);
 void CollisionChecker::levineInit() {
   DIR *dp;
   struct dirent *dirp;
+#ifdef FISHEYE
+  string depthMapDir("etc/levine/fisheye/");
+#else
   string depthMapDir("etc/levine/");
+#endif
   makePath(depthMapDir);
   if((dp = opendir(depthMapDir.c_str())) == NULL) {
     cout << "ERROR OPENING DEPTH MAP DIRECTORY" << endl;

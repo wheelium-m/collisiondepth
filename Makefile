@@ -2,6 +2,7 @@ CC=$(shell (command -v clang++ >/dev/null && echo "clang++" || echo "g++"))
 CFLAGS += -Iinclude $(shell pkg-config --cflags bullet)\
  $(shell pkg-config --cflags sdl)\
  $(shell pkg-config --cflags SDL_gfx) -O3 -Wall
+# -DFISHEYE
 # -DSPHERE_RADIUS=0.2 -DMODEL_SCALE=0.5
 
 # --std=c++11 -stdlib=libc++
