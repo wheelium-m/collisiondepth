@@ -311,6 +311,7 @@ bool SDLBackend::loop(btTransform& robotFrame) {
 
   // Find and navigate path
   static int currentPathPose = 0;
+/*
   static int subFrame = 0;
 
   if(firstTime) {
@@ -352,7 +353,7 @@ bool SDLBackend::loop(btTransform& robotFrame) {
     cout << "Poses were collision checked in a single view " << (float)oneViewNeeded / (float)(oneViewNeeded+multipleViewsNeeded) << "% of the time." << endl;
   }
   ///
-
+  */
   while (SDL_PollEvent(&keyevent))   //Poll our SDL key event for any keystrokes.
     {
       
