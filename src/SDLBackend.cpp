@@ -21,10 +21,15 @@ using namespace std;
 
 // When generating depthmaps from PCD files, we use a virtual camera
 // with a focal length of 1.0.
+#ifdef FISHEYE
+#define FOCAL_LENGTH 160.0
+#define FOCAL_LENGTH_X 160.0
+#define FOCAL_LENGTH_Y 120.0
+#else
 #define FOCAL_LENGTH 320.0
 #define FOCAL_LENGTH_X 320.0
 #define FOCAL_LENGTH_Y 240.0
-// #define FOCAL_LENGTH_Y 320.0
+#endif
 
 #define PI 3.1415926535
 

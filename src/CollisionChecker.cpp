@@ -9,7 +9,12 @@
 // #ifdef MAC
 // #include <thread>
 // #endif
+
+#ifdef FISHEYE
+#define FOCAL_LENGTH 160.0
+#else
 #define FOCAL_LENGTH 320.0
+#endif
 
 using namespace std;
 
@@ -159,8 +164,15 @@ void checkMap(const int threadId,
   const int h = depth->height;
   const btTransform depthTrans = depth->trans;
   //const float focalLength = depth->focalLength;
+
+#ifdef FISHEYE
+  const float focalLengthX = 160.0f;
+  const float focalLengthY = 120.0f;
+#else
   const float focalLengthX = 320.0f;
   const float focalLengthY = 240.0f;
+#endif
+
   const int halfW = w / 2;
   const int halfH = h / 2;
 
@@ -240,11 +252,17 @@ void CollisionChecker::getCollisionInfo(const btTransform& robotFrame,
   // serially.
 
   // thread* t = new thread[depthMaps.size()];
-  
+
+  stats.numChecks++;
   for(int i = 0; i < depthMaps.size(); i++) {
     // Quick visibility feasibility test
     btVector3 test = depthMaps[i]->trans(robotFrame.getOrigin());
     if(test.z() > 0 || test.length2() > 100) continue;
+
+    // Tighter FOV test
+    //if(acos(btVector3(0,0,-1).dot(test) / test.length()) > 1.65) continue;
+
+    stats.numViews++;
 
     checkMap(i, models, &possibleCollision, depthMaps[i], robotFrame, 
              sphereRadius, jointAngles);
@@ -403,7 +421,11 @@ extern btTransform parsePose(const char* filename);
 void CollisionChecker::levineInit() {
   DIR *dp;
   struct dirent *dirp;
+#ifdef FISHEYE
+  string depthMapDir("etc/levine/fisheye/");
+#else
   string depthMapDir("etc/levine/");
+#endif
   makePath(depthMapDir);
   if((dp = opendir(depthMapDir.c_str())) == NULL) {
     cout << "ERROR OPENING DEPTH MAP DIRECTORY" << endl;
@@ -526,4 +548,21 @@ vector<float> CollisionChecker::getDepthPoses() {
     v[o+6] = r.w();
   }
   return v;
+}
+
+void CollisionChecker::resetStats() {
+  stats.numChecks = 0;
+  stats.numViews = 0;
+}
+
+void CollisionChecker::getStats(vector<string>& fieldNames, 
+                                vector<double>& fieldValues) {
+  fieldNames.clear();
+  fieldValues.clear();
+
+  fieldNames.push_back("num_checks");
+  fieldValues.push_back((double)stats.numChecks);
+
+  fieldNames.push_back("num_views");
+  fieldValues.push_back((double)stats.numViews);
 }
