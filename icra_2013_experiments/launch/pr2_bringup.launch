@@ -51,7 +51,7 @@
   </node>
 
 
-  <!-- Tilt Laser dynamic_reconfigure
+  <!-- Tilt Laser dynamic_reconfigure -->
   <node pkg="gazebo_plugins" type="hokuyo_node" name="tilt_hokuyo_node">
     <param name="port" type="string" value="/etc/ros/sensors/tilt_hokuyo" />
     <param name="frame_id" type="string" value="laser_tilt_link" />
@@ -60,7 +60,7 @@
     <param name="skip" type="int" value="1" />
     <param name="intensity" value="true" />
   </node>
-  -->
+
 
   <!-- Buffer Server -->
   <node pkg="tf2_ros" type="buffer_server" name="tf2_buffer_server" output="screen">

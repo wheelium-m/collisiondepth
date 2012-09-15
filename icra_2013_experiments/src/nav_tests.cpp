@@ -10,6 +10,8 @@ NavTests::NavTests() : ph_("~")
 
   larm_ = new Arm("left");
   rarm_ = new Arm("right");
+
+  planner_ = new sbpl_3dnav_planner::Sbpl3DNavPlanner();
 }
 
 NavTests::~NavTests()
@@ -26,6 +28,13 @@ bool NavTests::getParams()
 {
   if(!getLocations() || !getExperiments() || !getConfigurations())
     return false;
+
+  if(!planner_->init())
+  {
+    ROS_ERROR("[exp] Failed to initialize the planner.");
+    return false;
+  }
+
   return true;
 }
 
@@ -114,7 +123,7 @@ bool NavTests::getConfigurations()
     while(ss >> p)
       config_map_[name].rangles.push_back(atof(p.c_str()));
     std::stringstream ss1(config_list[i]["langles"]);
-    while(ss >> p)
+    while(ss1 >> p)
       config_map_[name].langles.push_back(atof(p.c_str()));
     config_map_[name].body.z = double(config_list[i]["torso"]);
   }
@@ -165,26 +174,8 @@ bool NavTests::getExperiments()
       return false;
     }
     e.goal = std::string(exp_list[i]["goal"]);
+    e.config = std::string(exp_list[i]["config"]);
     e.start = std::string(exp_list[i]["start"]);
-/*
-    if(exp_list[i].hasMember("start"))
-    {
-      e.start.rangles.clear();
-      e.start.langles.clear();
-      std::vector<double> bpose;
-      plist = exp_list[i]["start"]["right"];
-      std::stringstream ss(plist);
-      while(ss >> p)
-        e.start.rangles.push_back(atof(p.c_str()));
-
-      plist = exp_list[i]["start"]["left"];
-      std::stringstream ss1(plist);
-      while(ss1 >> p)
-        e.start.langles.push_back(atof(p.c_str()));
-    
-      e.start.body.z = double(exp_list[i]["start"]["spine"]);
-    }
-*/
     ROS_INFO("Adding experiment: %s", e.name.c_str());
     exp_map_[e.name] = e;
   }
@@ -217,14 +208,10 @@ void NavTests::printExperiments()
   {
     int p = std::distance(exp_map_.begin(), iter);
     ROS_INFO("------------------------------");
-    ROS_INFO("[%d]  name: %s", p, iter->second.name.c_str());
-    ROS_INFO("[%d]  goal: %s", p, iter->second.goal.c_str());
-    ROS_INFO("[%d] start: %s", p, iter->second.start.c_str());
-    /*
-    ROS_INFO("[%d]   right: % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f", p, iter->second.start.rangles[0], iter->second.start.rangles[1], iter->second.start.rangles[2], iter->second.start.rangles[3], iter->second.start.rangles[4], iter->second.start.rangles[5], iter->second.start.rangles[6]);
-    ROS_INFO("[%d]    left: % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f % 0.3f", p, iter->second.start.langles[0], iter->second.start.langles[1], iter->second.start.langles[2], iter->second.start.langles[3], iter->second.start.langles[4], iter->second.start.langles[5], iter->second.start.langles[6]);
-    ROS_INFO("[%d]   torso: % 0.3f", p, iter->second.start.body.z);
-    */
+    ROS_INFO("[%d]   name: %s", p, iter->second.name.c_str());
+    ROS_INFO("[%d]   goal: %s", p, iter->second.goal.c_str());
+    ROS_INFO("[%d]  start: %s", p, iter->second.start.c_str());
+    ROS_INFO("[%d] config: %s", p, iter->second.config.c_str());
   }
 }
 
@@ -265,6 +252,16 @@ void NavTests::rpyToQuat(double roll, double pitch, double yaw, double &qx, doub
   qw = quat.getW();
 }
 
+void NavTests::bodyPoseToPoseStamped(const BodyPose &bp, std::string frame_id, geometry_msgs::PoseStamped &ps)
+{
+  ps.header.stamp = ros::Time::now();
+  ps.header.frame_id = frame_id;
+  ps.pose.position.x = bp.x;
+  ps.pose.position.y = bp.y;
+  ps.pose.position.z = 0;
+  rpyToQuat(0,0,bp.theta, ps.pose.orientation.x, ps.pose.orientation.y, ps.pose.orientation.z, ps.pose.orientation.w);
+}
+
 bool NavTests::runTests()
 {
   geometry_msgs::Quaternion quat;
@@ -274,19 +271,29 @@ bool NavTests::runTests()
   {
     printf("************** %s **************\n", iter->first.c_str());
     
+    /*
     getBasePose(bx, by, btheta, quat);
     ROS_INFO("[exp] start_base: %0.3f %0.3f %0.3frad", bx, by, btheta);
-    ROS_INFO("[exp] Going to start configuration.");
-    config_map_[iter->second.start].body.x = bx;
-    config_map_[iter->second.start].body.y = by;
-    config_map_[iter->second.start].body.theta = btheta;
-    printRobotPose(config_map_[iter->second.start], "start");
-    if(!goToRobotConfiguration(config_map_[iter->second.start].rangles, config_map_[iter->second.start].langles, config_map_[iter->second.start].body.z))
+    ROS_INFO("[exp] Moving arms into start configuration.");
+    config_map_[iter->second.config].body.x = bx;
+    config_map_[iter->second.config].body.y = by;
+    config_map_[iter->second.config].body.theta = btheta;
+    printRobotPose(config_map_[iter->second.config], "start");
+    */
+    if(!goToRobotConfiguration(config_map_[iter->second.config].rangles, config_map_[iter->second.config].langles, config_map_[iter->second.config].body.z))
       return false;
-    sleep(2);
 
+    ROS_INFO("[exp] Moving torso into start configuration.");
+    torso_.goTo(config_map_[iter->second.config].body.z);
+    sleep(1.0);
+
+    /*
     ROS_INFO("[exp] Sending goal...");
     if(!sendNavGoal(iter->first))
+      return false;
+    */
+
+    if(!callPlanner(iter->second.start, iter->second.goal))
       return false;
   }
   return true;
@@ -337,4 +344,63 @@ void NavTests::printRobotPose(RobotPose &pose, std::string name)
   ROS_INFO("[%s] torso: % 0.3f", name.c_str(), pose.body.z);
 }
 
+void NavTests::visualizeAllConfigurations()
+{
+  int i = 0;
+  BodyPose start_pose, prev_goal_pose;
+  prev_goal_pose.x = 0;
+  prev_goal_pose.y = 0;
+  prev_goal_pose.theta = 0;
+  
+  start_pose.x = prev_goal_pose.x;
+  start_pose.y = prev_goal_pose.y;
+  start_pose.theta = prev_goal_pose.theta;
+  start_pose.z = config_map_[exp_map_.begin()->second.start].body.z; 
+  pviz_.visualizeRobotWithTitle(config_map_[exp_map_.begin()->second.start].rangles, config_map_[exp_map_.begin()->second.start].langles, start_pose, 10, "robot_configurations", i*35, boost::lexical_cast<std::string>(i));
+  i++;
+
+  for(std::map<std::string,Experiment>::iterator iter = exp_map_.begin(); iter != exp_map_.end(); ++iter)
+  {
+    start_pose.x = loc_map_[iter->second.goal].at(0);
+    start_pose.y = loc_map_[iter->second.goal].at(1);
+    start_pose.theta = loc_map_[iter->second.goal].at(2);
+    start_pose.z = config_map_[iter->second.start].body.z; 
+    pviz_.visualizeRobotWithTitle(config_map_[iter->second.start].rangles, config_map_[iter->second.start].langles, start_pose, 160, "robot_configurations", i*35, boost::lexical_cast<std::string>(i));
+
+    //prev_goal_pose.x = loc_map_[iter->second.goal].at(0);
+    //prev_goal_pose.y = loc_map_[iter->second.goal].at(1);
+    //prev_goal_pose.theta = loc_map_[iter->second.goal].at(2);
+    i++;
+  }
+}
+
+bool NavTests::callPlanner(std::string start, std::string goal)
+{
+  geometry_msgs::PoseStamped pstart, pgoal;
+  std::vector<geometry_msgs::PoseStamped> plan;
+
+  pgoal.header.frame_id = "map";
+  pstart.header.stamp = ros::Time::now();
+  pstart.pose.position.x = loc_map_[start].at(0);
+  pstart.pose.position.y = loc_map_[start].at(1);
+  pstart.pose.position.z = 0;
+  rpyToQuat(0, 0, loc_map_[start].at(2), pstart.pose.orientation.x, pstart.pose.orientation.y, pstart.pose.orientation.z, pstart.pose.orientation.w);
+
+  pgoal.header.frame_id = "map";
+  pgoal.header.stamp = ros::Time::now();
+  pgoal.pose.position.x = loc_map_[goal].at(0);
+  pgoal.pose.position.y = loc_map_[goal].at(1);
+  pgoal.pose.position.z = 0;
+  rpyToQuat(0, 0, loc_map_[goal].at(2), pgoal.pose.orientation.x, pgoal.pose.orientation.y, pgoal.pose.orientation.z, pgoal.pose.orientation.w);
+
+  ROS_INFO("[exp] Sending goal");
+
+  if(!planner_->makePlan(pstart, pgoal, plan))
+  {
+    ROS_ERROR("[exp] Planner failed. {start: %s  goal: %s}", start.c_str(), goal.c_str());
+    return false;
+  }
+
+  return true;
+}
 

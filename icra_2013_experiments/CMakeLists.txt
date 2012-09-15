@@ -21,11 +21,14 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+include_directories(/home/bcohen/ros/icra_2013/collisiondepth/include)
+
+
 #common commands for building c++ executables and libraries
 rosbuild_add_library(${PROJECT_NAME} src/nav_tests.cpp)
+target_link_libraries(${PROJECT_NAME} sbpl_3dnav_planner)
 
-#target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(runTests src/run_tests.cpp)
+rosbuild_add_executable(runTests src/arm.cpp src/torso.cpp src/run_tests.cpp)
 target_link_libraries(runTests ${PROJECT_NAME})

@@ -11,7 +11,7 @@
     <remap from="map" to="map_server_map"/>
   </node>
 
-  <node machine="c2" name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(find icra_2013_experiments)/maps/levine4th_floor-18.bt" >
+  <node machine="c2" name="octomap_server_combined" pkg="octomap_server" type="octomap_server_node" args="$(find icra_2013_experiments)/maps/levine4th_floor-27.bt" >
     <param name="resolution" value="0.025" />
     <param name="sensor_model/range" value="4.0" />
 

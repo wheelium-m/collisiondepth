@@ -6,22 +6,10 @@ Target\ Frame=<Fixed Frame>
 3DNav\ \+\ Executive.3dnav_goal=1
 3DNav\ \+\ Executive.Enabled=1
 3DNav\ \+\ Executive.Marker\ Topic=visualization_marker
-3DNav\ \+\ Executive.distance_field=1
+3DNav\ \+\ Executive.depth_space_model=1
+3DNav\ \+\ Executive.pr2_collision_model=1
 3DNav\ \+\ Executive.robot_path=1
-Attached\ Objects.Enabled=1
-Attached\ Objects.Marker\ Topic=/attached_objects
-CollisionMap.Alpha=1
-CollisionMap.ColorR=0.1
-CollisionMap.ColorG=1
-CollisionMap.ColorB=0
-CollisionMap.Enabled=1
-CollisionMap.Override\ Color=0
-CollisionMap.Render\ Operation=0
-CollisionMap.Topic=
-Grasp\ Execution.Enabled=1
-Grasp\ Execution.Marker\ Topic=/object_manipulator/grasp_execution_markers
-Grasps.Enabled=1
-Grasps.Marker\ Topic=/grasp_markers
+3DNav\ \+\ Executive.spheres-cameras=1
 Grid.Alpha=0.5
 Grid.Cell\ Size=1
 Grid.ColorR=0.5
@@ -37,8 +25,6 @@ Grid.OffsetZ=0
 Grid.Plane=0
 Grid.Plane\ Cell\ Count=10
 Grid.Reference\ Frame=<Fixed Frame>
-Kinematics\ Collisions.Enabled=1
-Kinematics\ Collisions.Marker\ Topic=/kinematics_collisions
 Map.Alpha=0.7
 Map.Draw\ Behind=0
 Map.Enabled=1
@@ -47,7 +33,7 @@ OctoMap.Alpha=1
 OctoMap.Billboard\ Size=0.01
 OctoMap.Color\ Transformer=Intensity
 OctoMap.Decay\ Time=0
-OctoMap.Enabled=1
+OctoMap.Enabled=0
 OctoMap.Position\ Transformer=XYZ
 OctoMap.Selectable=1
 OctoMap.Style=1
@@ -71,10 +57,6 @@ OctoMap..IntensityMin\ ColorG=0
 OctoMap..IntensityMin\ ColorB=0
 OctoMap..IntensityMin\ Intensity=0
 OctoMap..IntensityUse\ full\ RGB\ spectrum=0
-Planning\ Scene.Enabled=1
-Planning\ Scene.Marker\ Topic=/planning_scene_markers
-Point\ Cluster\ Grasps.Enabled=1
-Point\ Cluster\ Grasps.Marker\ Topic=/point_cluster_grasp_planner_markers
 Robot\ Model.Alpha=1
 Robot\ Model.Collision\ Enabled=0
 Robot\ Model.Enabled=1
@@ -186,15 +168,11 @@ Robot\:\ Robot\ Model\ Link\ sensor_mount_linkShow\ Axes=0
 Robot\:\ Robot\ Model\ Link\ sensor_mount_linkShow\ Trail=0
 Robot\:\ Robot\ Model\ Link\ torso_lift_linkShow\ Axes=0
 Robot\:\ Robot\ Model\ Link\ torso_lift_linkShow\ Trail=0
-Tabletop\ Objects.Enabled=1
-Tabletop\ Objects.Marker\ Topic=/tabletop_object_recognition_markers
-Tabletop\ Segmentation.Enabled=1
-Tabletop\ Segmentation.Marker\ Topic=/tabletop_segmentation_markers
 Tool\ 2D\ Nav\ GoalTopic=/move_base_simple/goal
 Tool\ 2D\ Pose\ EstimateTopic=initialpose
 Camera\ Type=rviz::OrbitViewController
-Camera\ Config=0.186 5.85398 12.1085 -0.0721843 -0.516371 0.294232
-Property\ Grid\ State=selection=Grasps.Enabled;expanded=CollisionMap.Enabled.CollisionMap.StatusTopStatus,3DNav + Executive.Enabled.3DNav + Executive.Namespaces,Tabletop Objects.Enabled.Tabletop Objects.Namespaces,Tabletop Segmentation.Enabled.Tabletop Segmentation.Namespaces,Grasps.Enabled.Grasps.Namespaces,Kinematics Collisions.Enabled.Kinematics Collisions.Namespaces,Attached Objects.Enabled.Attached Objects.Namespaces,Point Cluster Grasps.Enabled.Point Cluster Grasps.Namespaces,Grasp Execution.Enabled.Grasp Execution.Namespaces,Planning Scene.Enabled.Planning Scene.Namespaces;scrollpos=0,0;splitterpos=150,301;ispageselected=1
+Camera\ Config=1.276 0.150801 24.8281 -0.442124 -0.601693 -1.90088
+Property\ Grid\ State=selection=;expanded=3DNav + Executive.Enabled.3DNav + Executive.Namespaces;scrollpos=0,0;splitterpos=150,301;ispageselected=1
 [Display0]
 Name=Grid
 Package=rviz
@@ -212,42 +190,6 @@ Name=OctoMap
 Package=rviz
 ClassName=rviz::PointCloud2Display
 [Display4]
-Name=CollisionMap
-Package=mapping_rviz_plugin
-ClassName=mapping_rviz_plugin::CollisionMapDisplay
-[Display5]
 Name=3DNav + Executive
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display6]
-Name=Tabletop Objects
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display7]
-Name=Tabletop Segmentation
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display8]
-Name=Grasps
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display9]
-Name=Kinematics Collisions
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display10]
-Name=Attached Objects
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display11]
-Name=Point Cluster Grasps
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display12]
-Name=Grasp Execution
-Package=rviz
-ClassName=rviz::MarkerDisplay
-[Display13]
-Name=Planning Scene
 Package=rviz
 ClassName=rviz::MarkerDisplay

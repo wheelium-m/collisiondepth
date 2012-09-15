@@ -5,7 +5,7 @@
   <node pkg="move_base" type="move_base" name="move_base" output="screen" >
     <param name="base_global_planner" value="Sbpl3DNavPlanner"/>
     <rosparam file="$(find icra_2013_experiments)/config/pr2_both_arms.yaml" command="load"/>
-    <rosparam file="$(find icra_2013_experiments)/config/pr2_body.yaml" command="load"/>
+    <rosparam file="$(find icra_2013_experiments)/config/pr2_body_10cm_no_arms.yaml" command="load"/>
 
     <param name="planner/motion_primitive_file" value="$(find sbpl_full_body_planner)/config/pr2-32.mprim"/>
     <param name="planner/base_motion_primitive_file" value="$(find sbpl_full_body_planner)/config/full_body_base.mprim"/>
@@ -32,7 +32,7 @@
     <rosparam file="$(find sbpl_3dnav_planner)/config/base_local_planner_poses.yaml" command="load" />
     
     <param name="icra2013/use_anthony_cc" value="true"/>
-    <param name="icra2013/use_ben_cc" value="true"/>
+    <param name="icra2013/use_ben_cc" value="false"/>
     <param name="icra2013/use_anthony_cc_as_primary" value="true"/>
   </node>
 </launch>

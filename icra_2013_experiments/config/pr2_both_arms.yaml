@@ -1,5 +1,5 @@
 planner:
-  epsilon: 30.0
+  epsilon: 10.0
   epsilon2: 2.0
   verbose: false
   search_mode: true
@@ -44,9 +44,9 @@ visualizations:
   expanded_states: false
   trajectory: true
   end_effector_path: false
-  collision_model: true
+  collision_model: false
   collision_model_trajectory: false
-  trajectory_throttle: 100
+  trajectory_throttle: 200
 
 collision_space:
   reference_frame: map

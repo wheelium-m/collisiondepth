@@ -57,6 +57,6 @@ task specific. For example, maps should not be in here.
   <include file="$(find pr2_navigation_teleop)/teleop.xml" />
 
   <!-- service for transforming using a supplied robot state rather than TF -->
-  <node pkg="state_transformer" name="state_transformer" type="state_transformer"/>
+  <node pkg="state_transformer" name="state_transformer" type="state_transformer" output="screen" />
 
 </launch>

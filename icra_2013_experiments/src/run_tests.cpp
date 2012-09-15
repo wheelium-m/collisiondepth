@@ -14,12 +14,17 @@ int main(int argc, char ** argv)
   nt.printExperiments();
   sleep(2);
 
+  nt.visualizeAllConfigurations();
+  sleep(2);
+  ros::spinOnce();
+
+  
   if(!nt.runTests())
   {
     ROS_ERROR("Failed to run all of the tests.");
-    return -1;
+    return 0;
   }
-
+  
   return 0;
 }
 
