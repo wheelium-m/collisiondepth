@@ -10,6 +10,7 @@ import Data.Monoid
 import qualified Data.Traversable as T
 import Data.Yaml.YamlLight hiding (parseYamlFile)
 import Data.Yaml.Syck
+import System.Environment (getArgs)
 import System.IO (openFile, IOMode(..), hClose)
 
 testFile :: FilePath
@@ -65,7 +66,8 @@ mergeCoincidentGroups = map snd . M.toList . foldl' aux mempty . map (\g -> (fra
         mergeGroups g1 g2 = g1 { spheres = spheres g1 ++ spheres g2 }
 
 main :: IO ()
-main = do yml <- fromYamlNode <$> parseYamlFile testFile
+main = do fileName <- getFileName <$> getArgs
+          yml <- fromYamlNode <$> parseYamlFile fileName
           let Just groups' = lookupYL (YStr "groups") yml 
                             >>= unSeq >>= mapM parseGroup
               groups = mergeCoincidentGroups groups'
@@ -78,3 +80,5 @@ main = do yml <- fromYamlNode <$> parseYamlFile testFile
                 groups
           T.traverse (print . spheres) $ find ((== "base_link") . frame) groups
           hClose h
+  where getFileName [f] = f
+        getFileName _ = testFile
