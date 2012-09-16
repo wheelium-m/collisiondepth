@@ -13,6 +13,8 @@ import Data.Yaml.Syck
 import System.Environment (getArgs)
 import System.IO (openFile, IOMode(..), hClose)
 
+import Debug.Trace
+
 testFile :: FilePath
 --testFile = "etc/pr2_body.yaml"
 testFile = "../icra_2013_experiments/config/pr2_body_10cm.yaml"
@@ -31,7 +33,11 @@ data Sphere = Sphere { x        :: ByteString
 
 getSpheres :: YamlLight -> Group -> [Sphere]
 getSpheres yml g = mapMaybe aux (spheres g)
-  where aux k = lookupYL (YStr k) yml >>= parseSphere
+  where aux k = maybe (trace ("Couldn't resolve "++show k) Nothing) 
+                      Just 
+                      (lookupYL (YStr k) yml)
+                >>= parseSphere
+  --where aux k = lookupYL (YStr k) yml >>= parseSphere
 
 parseSphere :: YamlLight -> Maybe Sphere
 parseSphere yml = Sphere <$> (get "x")
