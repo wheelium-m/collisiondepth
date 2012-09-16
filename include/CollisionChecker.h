@@ -34,6 +34,8 @@ public:
   int numDepthMaps() const;
   void makeJointVector(const std::map<std::string,float>&,
                        std::vector<float>&);
+  void makeJointMap(const std::vector<float>&,
+                    std::map<std::string,float>&);
   void makeCollisionMap(const std::vector<bool>&,
                         std::map<std::string,bool>&);
   bool isColliding(const btTransform& camera,
@@ -60,6 +62,11 @@ public:
                            BodyPose &pose,
                            std::string group_name,
                            std::vector<std::vector<double> > &spheres);
+  void remapJointVector(const std::vector<double>& langles,
+                        const std::vector<double>& rangles,
+                        const BodyPose& pose,
+                        std::vector<float>& jointAngles,
+                        btTransform& bodyFrame) const;
   void levineInit();
   vector<float> getDepthPoses();
 

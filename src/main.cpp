@@ -36,12 +36,25 @@ void go(Renderer& renderer) {
   // Note that the LAB.pcd data set doesn't extend up exactly
   // perpendicularly to the XZ plane as we might hope, and has a Y
   // bias of 2-2.5m. Hence this funny starting location Y coordinate.
-  btQuaternion rot(btVector3(1,0,0),3.14159*0.5);
-  rot = btQuaternion(btTransform(rot)(btVector3(0,0,1)), 3.14159*0.5) * rot;
-  btVector3 trans(13.614223,4.6128845,3.0635848);
-  btTransform robotFrame = btTransform(rot,trans);
+  // btQuaternion rot(btVector3(1,0,0),3.14159*0.5);
+  // rot = btQuaternion(btTransform(rot)(btVector3(0,0,1)), 3.14159*0.5) * rot;
+  // btVector3 trans(13.614223,4.6128845,3.0635848);
+  // btTransform robotFrame = btTransform(rot,trans);
 
-  robotFrame = btTransform::getIdentity();
+  // Kitchen video start body pose.
+  // btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -0.06),
+  //                                      btVector3(2.283, -0.256, 0.0));
+
+  // Kitchen video goal body pose.
+  // btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -0.033),
+  //                                      btVector3(0.43, 0.6, 0.0));
+
+  // Fountain video start body poes.
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -3.129),
+                                       btVector3(3.479, 6.684, 0.0));
+
+
+  //robotFrame = btTransform::getIdentity();
 
   while(renderer.loop(robotFrame)) {
     btVector3 t = robotFrame.getOrigin();

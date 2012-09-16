@@ -17,7 +17,7 @@ MACLIBS = $(shell pkg-config --libs bullet) $(shell pkg-config --libs sdl)\
 
 OBJS = SDLBackend.o Model.o HeatPalette.o DepthMap.o StlFile.o\
  CollisionChecker.o PoseParser.o YMCA.o Planner.o CollisionModel.o\
- PathHelper.o
+ PathHelper.o ICRAScenarios.o
 
 all:	src/main.cpp ${OBJS}
 	${CC} $^ ${CFLAGS} ${LIBS} -lglut -lGL -g -ltinyxml

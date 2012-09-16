@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include "YMCA.h"
 #include "Planner.h"
-
+#include "ICRAScenarios.h"
 using namespace std;
 
 //#define ZOOM 180.0
@@ -230,10 +230,22 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   posture["l_shoulder_lift_link"] = -45.0f * PI / 180;
   posture["r_shoulder_pan_link"] = -45.0f * PI / 180;
 */
+  /*
   const map<string,float>& posture = ymca(currentDanceFrame);
   
   vector<float> postureVec;
   checker->makeJointVector(posture, postureVec);
+  */
+  
+
+  vector<float> postureVec;
+  btTransform robotFrame2;
+  //kitchenStart(checker, postureVec, robotFrame2);
+  //kitchenGoal(checker, postureVec, robotFrame2);
+  fountainStart(checker, postureVec, robotFrame2);
+
+  map<string,float> posture;
+  checker->makeJointMap(postureVec, posture);
 
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;

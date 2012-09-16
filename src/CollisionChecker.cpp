@@ -124,6 +124,26 @@ void CollisionChecker::makeJointVector(const map<string,float>& jointAngleMap,
   }
 }
 
+void CollisionChecker::makeJointMap(const vector<float>& jointAngleVec,
+                                    map<string,float>& jointAngleMap) {
+  queue<const ModelTree*> q;
+  q.push(this->models[0]);
+  jointAngleMap.clear();
+  int jointIndex = 0;
+  while(!q.empty()) {
+    const ModelTree* m = q.front();
+    q.pop();
+    float angle = jointAngleVec[jointIndex];
+    if(angle != 0.0) {
+      jointAngleMap[m->curr->name] = angle;
+    }
+    jointIndex++;
+    for(ModelTree::child_iterator it = m->begin(); it != m->end(); it++) {
+      q.push(*it);
+    }
+  }
+}
+
 void CollisionChecker::makeCollisionMap(const vector<bool>& collisionVec,
                                         map<string,bool>& collisionMap) {
   int sphereIndex = 0;
@@ -343,13 +363,8 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
   //static vector<bool> collisions;
   
   // Joint angle remapping
-  //cout << "Joint angle remapping" << endl;
   for(int i = 0; i < 7; i++) {
-    //cout << "remapping langle " << i << " to " << langleRemap[i] << endl;
     myJointAngles[langleRemap[i]] = langles[i];
-  }
-
-  for(int i = 0; i < 7; i++) {
     myJointAngles[rangleRemap[i]] = rangles[i];
   }
 
@@ -361,6 +376,20 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
   for(int i = 0; i < myCollisions.size(); i++) 
     if(myCollisions[i]) return false;
   return true;
+}
+
+void CollisionChecker::remapJointVector(const vector<double>& langles,
+                                        const vector<double>& rangles,
+                                        const BodyPose& pose,
+                                        vector<float>& jointAngles,
+                                        btTransform& bodyFrame) const {
+  jointAngles.resize(this->numJoints);
+  for(int i = 0; i < 7; i++) {
+    jointAngles[langleRemap[i]] = (float)langles[i];
+    jointAngles[rangleRemap[i]] = (float)rangles[i];
+  }
+  bodyFrame = btTransform(btQuaternion(btVector3(0,0,1), pose.theta),
+                          btVector3(pose.x, pose.y, pose.z));
 }
 
 void CollisionChecker::getCollisionSpheres(vector<double>& langles,
@@ -380,9 +409,6 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
   // Joint angle remapping
   for(int i = 0; i < 7; i++) {
     myJointAngles[langleRemap[i]] = langles[i];
-  }
-
-  for(int i = 0; i < 7; i++) {
     myJointAngles[rangleRemap[i]] = rangles[i];
   }
 
