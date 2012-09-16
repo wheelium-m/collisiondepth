@@ -20,8 +20,8 @@ struct CameraSphere {
 
 // Obtain a reference to our static model data.
 const Model& model();
-const ModelTree& pr2();
-const ModelTree& pr2(const int modelIndex);
+const ModelTree* pr2();
+const ModelTree* pr2(const int modelIndex);
 const ModelTree& testTree();
 ModelTree* poseModel(const ModelTree&, const std::map<std::string,float>&);
 void freePosedModel(ModelTree*);

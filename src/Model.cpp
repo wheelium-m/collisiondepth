@@ -170,14 +170,14 @@ ModelTree* initPR2(const int modelIndex) {
   return t;
 }
 
-const ModelTree& pr2() {
-  static ModelTree* t = initPR2(0);
-  return *t;
+const ModelTree* pr2() {
+  /*static */ModelTree* t = initPR2(0);
+  return t;
 }
 
-const ModelTree& pr2(const int modelIndex) {
-  static ModelTree* t = initPR2(modelIndex);
-  return *t;
+const ModelTree* pr2(const int modelIndex) {
+  /*static */ModelTree* t = initPR2(modelIndex);
+  return t;
 }
 
 ModelTree* initTestTree() {

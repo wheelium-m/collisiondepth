@@ -32,6 +32,7 @@ private:
   SDL_Surface* m_display;
   FPSmanager* m_fps;
   CollisionChecker* checker;
+  const ModelTree* myPR2;
   void drawAxis(const btTransform &camera);
   void render(const btTransform& camera);
   void renderModel(const ModelTree& m, const btTransform& camera);

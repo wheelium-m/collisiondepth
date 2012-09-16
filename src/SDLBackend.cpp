@@ -49,7 +49,8 @@ void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
 
 SDLBackend::SDLBackend() : m_display(NULL) {
   cout << "SDLBackend constructor" << endl;
-  checker = new CollisionChecker(&pr2());
+  myPR2 = pr2(1);
+  checker = new CollisionChecker(2, myPR2);
   checker->levineInit();
 }
 
@@ -450,7 +451,7 @@ bool SDLBackend::loop(btTransform& robotFrame) {
 
   btTransform rot(robotFrame.getRotation());
   robotFrame.setOrigin(robotFrame.getOrigin() + rot(speed*translateRobot));
-  renderModel(pr2(), robotFrame);
+  renderModel(*myPR2, robotFrame);
   //SDL_framerateDelay(m_fps);
   return true;
 }
