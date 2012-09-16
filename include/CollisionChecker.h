@@ -15,6 +15,10 @@ private:
   std::vector<int> rangleRemap;
   void init(const int, const ModelTree*);
 
+  // Some structures we don't want to reallocate every iteration
+  std::vector<float> myJointAngles;
+  std::vector<bool> myCollisions;
+
   struct Stats {
     int modelNumber;
     int numChecks;

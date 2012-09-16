@@ -57,6 +57,7 @@ void CollisionChecker::init(const int modelNumber, const ModelTree* root) {
     }
   }
   cout << "Model has " << numSpheres << " spheres" << endl;
+  myJointAngles.resize(this->numJoints);
   stats.modelNumber = modelNumber;
   stats.numChecks = 0;
   stats.numViews = 0;
@@ -338,26 +339,27 @@ bool CollisionChecker::checkCollision(vector<double> &langles,
                                       bool verbose, 
                                       unsigned char &dist, 
                                       int &debug_code) {
-  static vector<float> jointAngles(this->numJoints);
-  static vector<bool> collisions;
-
+  //static vector<float> jointAngles(this->numJoints);
+  //static vector<bool> collisions;
+  
   // Joint angle remapping
   //cout << "Joint angle remapping" << endl;
   for(int i = 0; i < 7; i++) {
     //cout << "remapping langle " << i << " to " << langleRemap[i] << endl;
-    jointAngles[langleRemap[i]] = langles[i];
+    myJointAngles[langleRemap[i]] = langles[i];
   }
 
   for(int i = 0; i < 7; i++) {
-    jointAngles[rangleRemap[i]] = rangles[i];
+    myJointAngles[rangleRemap[i]] = rangles[i];
   }
 
   //cout << "Setting up robotFrame" << endl;
   btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), pose.theta),
                                        btVector3(pose.x, pose.y, pose.z));
-  getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, jointAngles, collisions);
-  for(int i = 0; i < collisions.size(); i++) 
-    if(collisions[i]) return false;
+  getCollisionInfo(robotFrame, SPHERE_RADIUS*MODEL_SCALE, 
+                   myJointAngles, myCollisions);
+  for(int i = 0; i < myCollisions.size(); i++) 
+    if(myCollisions[i]) return false;
   return true;
 }
 
@@ -366,8 +368,8 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
                                            BodyPose& pose,
                                            string group_name,
                                            vector<vector<double> >& spheres) {
-  static vector<float> jointAngles(this->numJoints);
-  static vector<bool> collisions;
+  // static vector<float> jointAngles(this->numJoints);
+  // static vector<bool> collisions;
 
   int oldSize = spheres.size();
   spheres.resize(this->numSpheres);
@@ -377,11 +379,11 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
 
   // Joint angle remapping
   for(int i = 0; i < 7; i++) {
-    jointAngles[langleRemap[i]] = langles[i];
+    myJointAngles[langleRemap[i]] = langles[i];
   }
 
   for(int i = 0; i < 7; i++) {
-    jointAngles[rangleRemap[i]] = rangles[i];
+    myJointAngles[rangleRemap[i]] = rangles[i];
   }
 
   btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), pose.theta),
@@ -400,7 +402,7 @@ void CollisionChecker::getCollisionSpheres(vector<double>& langles,
     const ModelTree* child = q[qHead].second;
     qHead++;
     qRemaining--;
-    const float angle = jointAngles[jointIndex++];
+    const float angle = myJointAngles[jointIndex++];
     const Joint* const j = child->curr;
     
     if(angle != 0)
