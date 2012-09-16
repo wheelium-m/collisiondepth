@@ -15,12 +15,14 @@ private:
   std::vector<int> rangleRemap;
 
   struct Stats {
+    int modelNumber;
     int numChecks;
     int numViews;
     double preprocessingTime;
   } stats;
 public:
   CollisionChecker(const ModelTree*);
+  CollisionChecker(int, const ModelTree*);
   void addDepthMap(const DepthMap*);
   const DepthMap* getDepthMap(int i);
   const DepthMap* getActiveDepthMap();

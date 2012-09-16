@@ -20,6 +20,10 @@
 using namespace std;
 
 CollisionChecker::CollisionChecker(const ModelTree* root) {
+  CollisionChecker(0, root);
+}
+
+CollisionChecker::CollisionChecker(int modelNumber, const ModelTree* root) {
   this->models.push_back(root);
   queue<const ModelTree*> q;
   q.push(root);
@@ -57,7 +61,10 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
     }
   }
   cout << "Model has " << numSpheres << " spheres" << endl;
-  
+  stats.modelNumber = modelNumber;
+  stats.numChecks = 0;
+  stats.numViews = 0;
+  stats.preprocessingTime = 0.0;
 }
 
 void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
@@ -566,17 +573,24 @@ void CollisionChecker::resetStats() {
   stats.numViews = 0;
 }
 
+string makeStatName(const string& prefix, const int suffix) {
+  stringstream ss;
+  ss << prefix << suffix;
+  return ss.str();
+}
+
 void CollisionChecker::getStats(vector<string>& fieldNames, 
                                 vector<double>& fieldValues) {
   fieldNames.clear();
   fieldValues.clear();
 
-  fieldNames.push_back("num_checks");
+  fieldNames.push_back(makeStatName("num_checks", stats.modelNumber));
   fieldValues.push_back((double)stats.numChecks);
 
-  fieldNames.push_back("num_views");
+  fieldNames.push_back(makeStatName("num_views", stats.modelNumber));
   fieldValues.push_back((double)stats.numViews);
 
-  fieldNames.push_back("preprocessing_per_image");
+  fieldNames.push_back(makeStatName("preprocessing_per_image", 
+                                    stats.modelNumber));
   fieldValues.push_back(stats.preprocessingTime);
 }
