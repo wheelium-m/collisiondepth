@@ -5,7 +5,7 @@ groups:
     spheres: t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11
   - name: base
     frame: base_link
-    spheres: b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14 b15 b16 b17 b18 b19 b20 b21 b22 b23 b24 b25 b26 b27 b28 b29 b30 b31 b32 b33 b34 b35 b36 b37 b38 b39 b40 b41 b42 b43 b44 b45 b46
+    spheres: b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b14 b15 b16 b17 b18 b19 b20 b21 b22 b23 b24 b25 b26 b27 b28 b29 b30 b31 b32 b33 b34 b35 b36 b37 b38 b39 b40 b41 b42 b43 b44 b45 b46
   - name: torso_upper
     frame: torso_lift_link
     spheres: tu1 tu2 tu3 tu4 tu5 tu6 tu7 tu8 tu9 tu10 tu11 tu12 tu13 tu14 tu15 tu16 tu17 tu18 tu19 tu20 tu21 tu22 tu23 tu24 tu25 tu26 tu27 tu28 tu_vent1 tu_vent2 tu_vent3
@@ -106,15 +106,15 @@ n10: {x: 0.07, y: -0.1, z: 0.365, radius: 0.1, priority: 1}
 n11: {x: 0.07, y: -0.00, z: 0.365, radius: 0.1, priority: 1}
 
 # Head
-h1: {x: 0.05, y: 0.09, z: 0.1, radius: 0.1, priority: 1}
-h2: {x: 0.05, y: 0.00, z: 0.1, radius: 0.1, priority: 1}
-h3: {x: 0.05, y: -0.09, z: 0.1, radius: 0.1, priority: 1}
-h4: {x: -0.02, y: 0.09, z: 0.15, radius: 0.1, priority: 1}
-h5: {x: -0.02, y: 0.00, z: 0.15, radius: 0.1, priority: 1}
+h1: {x: 0.05,  y:  0.09, z: 0.1, radius: 0.1, priority: 1}
+h2: {x: 0.05,  y:  0.00, z: 0.1, radius: 0.1, priority: 1}
+h3: {x: 0.05,  y: -0.09, z: 0.1, radius: 0.1, priority: 1}
+h4: {x: -0.02, y:  0.09, z: 0.15, radius: 0.1, priority: 1}
+h5: {x: -0.02, y:  0.00, z: 0.15, radius: 0.1, priority: 1}
 h6: {x: -0.02, y: -0.09, z: 0.15, radius: 0.1, priority: 1}
-h7: {x: 0.1, y: 0.09, z: 0.075, radius: 0.1, priority: 1}
-h8: {x: 0.1, y: 0.00, z: 0.075, radius: 0.1, priority: 1}
-h9: {x: 0.1, y: -0.09, z: 0.075, radius: 0.1, priority: 1}
+h7: {x:   0.1, y:  0.09, z: 0.075, radius: 0.1, priority: 1}
+h8: {x:   0.1, y:  0.00, z: 0.075, radius: 0.1, priority: 1}
+h9: {x:   0.1, y:  -0.09, z: 0.075, radius: 0.1, priority: 1}
 
 # Gripper
 g0: {x: 0.08, y: 0.0, z: 0.00, radius: 0.1, priority: 1}
