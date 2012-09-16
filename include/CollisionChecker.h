@@ -17,6 +17,7 @@ private:
   struct Stats {
     int numChecks;
     int numViews;
+    double preprocessingTime;
   } stats;
 public:
   CollisionChecker(const ModelTree*);

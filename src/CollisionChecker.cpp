@@ -5,6 +5,7 @@
 #include <iostream>
 #include "PathHelper.h"
 #include <dirent.h>
+#include <sys/time.h>
 
 // #ifdef MAC
 // #include <thread>
@@ -459,6 +460,10 @@ void CollisionChecker::levineInit() {
   //                        "etc/depths2.bin", "etc/depths2pose.txt",
   //                        "etc/depths3.bin", "etc/depths3pose.txt",
   //                        "etc/depths4.bin", "etc/depths4pose.txt"};
+
+  struct timeval start;
+  struct timeval stop;
+  gettimeofday(&start, NULL);
   for(int i = 0; i < imgFiles.size(); i++) {
     DepthMap* depth = new DepthMap();
     depth->depthID = this->numDepthMaps();
@@ -473,6 +478,12 @@ void CollisionChecker::levineInit() {
     depth->addDilation(SPHERE_RADIUS*MODEL_SCALE);
     addDepthMap(depth);
   }
+  gettimeofday(&stop, NULL);
+  stats.preprocessingTime = (stop.tv_sec - start.tv_sec) + \
+    0.000001 * (double)(stop.tv_usec - start.tv_usec);
+
+  // Per-image time is the most useful number.
+  stats.preprocessingTime /= (double)imgFiles.size();
 }
 
 void CollisionChecker::getCollisionInfoReference(const btTransform& camera,
@@ -565,4 +576,7 @@ void CollisionChecker::getStats(vector<string>& fieldNames,
 
   fieldNames.push_back("num_views");
   fieldValues.push_back((double)stats.numViews);
+
+  fieldNames.push_back("preprocessing_per_image");
+  fieldValues.push_back(stats.preprocessingTime);
 }
