@@ -5,6 +5,7 @@
 #include <iostream>
 #include "PathHelper.h"
 #include <dirent.h>
+#include <sys/time.h>
 
 // #ifdef MAC
 // #include <thread>
@@ -19,6 +20,10 @@
 using namespace std;
 
 CollisionChecker::CollisionChecker(const ModelTree* root) {
+  CollisionChecker(0, root);
+}
+
+CollisionChecker::CollisionChecker(int modelNumber, const ModelTree* root) {
   this->models.push_back(root);
   queue<const ModelTree*> q;
   q.push(root);
@@ -56,7 +61,10 @@ CollisionChecker::CollisionChecker(const ModelTree* root) {
     }
   }
   cout << "Model has " << numSpheres << " spheres" << endl;
-  
+  stats.modelNumber = modelNumber;
+  stats.numChecks = 0;
+  stats.numViews = 0;
+  stats.preprocessingTime = 0.0;
 }
 
 void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
@@ -459,6 +467,10 @@ void CollisionChecker::levineInit() {
   //                        "etc/depths2.bin", "etc/depths2pose.txt",
   //                        "etc/depths3.bin", "etc/depths3pose.txt",
   //                        "etc/depths4.bin", "etc/depths4pose.txt"};
+
+  struct timeval start;
+  struct timeval stop;
+  gettimeofday(&start, NULL);
   for(int i = 0; i < imgFiles.size(); i++) {
     DepthMap* depth = new DepthMap();
     depth->depthID = this->numDepthMaps();
@@ -473,6 +485,12 @@ void CollisionChecker::levineInit() {
     depth->addDilation(SPHERE_RADIUS*MODEL_SCALE);
     addDepthMap(depth);
   }
+  gettimeofday(&stop, NULL);
+  stats.preprocessingTime = (stop.tv_sec - start.tv_sec) + \
+    0.000001 * (double)(stop.tv_usec - start.tv_usec);
+
+  // Per-image time is the most useful number.
+  stats.preprocessingTime /= (double)imgFiles.size();
 }
 
 void CollisionChecker::getCollisionInfoReference(const btTransform& camera,
@@ -555,14 +573,24 @@ void CollisionChecker::resetStats() {
   stats.numViews = 0;
 }
 
+string makeStatName(const string& prefix, const int suffix) {
+  stringstream ss;
+  ss << prefix << suffix;
+  return ss.str();
+}
+
 void CollisionChecker::getStats(vector<string>& fieldNames, 
                                 vector<double>& fieldValues) {
   fieldNames.clear();
   fieldValues.clear();
 
-  fieldNames.push_back("num_checks");
+  fieldNames.push_back(makeStatName("num_checks", stats.modelNumber));
   fieldValues.push_back((double)stats.numChecks);
 
-  fieldNames.push_back("num_views");
+  fieldNames.push_back(makeStatName("num_views", stats.modelNumber));
   fieldValues.push_back((double)stats.numViews);
+
+  fieldNames.push_back(makeStatName("preprocessing_per_image", 
+                                    stats.modelNumber));
+  fieldValues.push_back(stats.preprocessingTime);
 }
