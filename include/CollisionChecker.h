@@ -13,6 +13,7 @@ private:
   int numJoints;
   std::vector<int> langleRemap;
   std::vector<int> rangleRemap;
+  void init(const int, const ModelTree*);
 
   struct Stats {
     int modelNumber;
@@ -22,7 +23,7 @@ private:
   } stats;
 public:
   CollisionChecker(const ModelTree*);
-  CollisionChecker(int, const ModelTree*);
+  CollisionChecker(const int, const ModelTree*);
   void addDepthMap(const DepthMap*);
   const DepthMap* getDepthMap(int i);
   const DepthMap* getActiveDepthMap();

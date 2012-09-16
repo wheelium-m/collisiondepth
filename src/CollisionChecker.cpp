@@ -19,11 +19,7 @@
 
 using namespace std;
 
-CollisionChecker::CollisionChecker(const ModelTree* root) {
-  CollisionChecker(0, root);
-}
-
-CollisionChecker::CollisionChecker(int modelNumber, const ModelTree* root) {
+void CollisionChecker::init(const int modelNumber, const ModelTree* root) {
   this->models.push_back(root);
   queue<const ModelTree*> q;
   q.push(root);
@@ -65,6 +61,14 @@ CollisionChecker::CollisionChecker(int modelNumber, const ModelTree* root) {
   stats.numChecks = 0;
   stats.numViews = 0;
   stats.preprocessingTime = 0.0;
+}
+
+CollisionChecker::CollisionChecker(const ModelTree* root) {
+  init(0, root);
+}
+
+CollisionChecker::CollisionChecker(const int modelNumber, const ModelTree* root) {
+  init(modelNumber, root);
 }
 
 void CollisionChecker::addDepthMap(const DepthMap* depthMap) {
