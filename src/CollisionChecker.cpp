@@ -39,11 +39,11 @@ void CollisionChecker::init(const int modelNumber, const ModelTree* root) {
   while(!q.empty()) {
     const ModelTree* m = q.front();
     q.pop();
-    cout << "Encountered frame " << m->curr->name << "(" << m->curr->name.size() << ")" << endl;
+    //cout << "Encountered frame " << m->curr->name << "(" << m->curr->name.size() << ")" << endl;
     for(int i = 0; i < 7; i++) {
-      cout << "  " << langleNames[i] << "(" << langleNames[i].size() << ")" << endl;
+      //cout << "  " << langleNames[i] << "(" << langleNames[i].size() << ")" << endl;
       if(langleNames[i].compare(m->curr->name) == 0) {
-	cout << "langleRemap " << i << " to " << numJoints << endl;
+	//cout << "langleRemap " << i << " to " << numJoints << endl;
 	langleRemap[i] = numJoints;
       }
     }
