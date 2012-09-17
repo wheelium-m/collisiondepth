@@ -50,7 +50,7 @@ void SDLBackend::addDepthMap(const char* depthImg, const char* imgPose) {
 SDLBackend::SDLBackend() : m_display(NULL) {
   cout << "SDLBackend constructor" << endl;
   myPR2 = pr2(1);
-  checker = new CollisionChecker(2, myPR2);
+  checker = new CollisionChecker(1, myPR2);
   checker->levineInit();
 }
 
@@ -239,13 +239,18 @@ void SDLBackend::renderModel(const ModelTree& rawRoot,
   
 
   vector<float> postureVec;
-  btTransform robotFrame2;
-  //kitchenStart(checker, postureVec, robotFrame2);
-  //kitchenGoal(checker, postureVec, robotFrame2);
-  fountainStart(checker, postureVec, robotFrame2);
+  // btTransform robotFrame2;
+  // //kitchenStart(checker, postureVec, robotFrame2);
+  // //kitchenGoal(checker, postureVec, robotFrame2);
+  // fountainStart(checker, postureVec, robotFrame2);
+  // map<string,float> posture;
+  // checker->makeJointMap(postureVec, posture);
 
   map<string,float> posture;
-  checker->makeJointMap(postureVec, posture);
+  posture["l_shoulder_pan_link"] = 90.0f * PI / 180;
+  posture["l_elbow_flex_link"] = 90.0f * PI / 180;
+  posture["l_upper_arm_roll_link"] = 180.0f * PI / 180;
+  checker->makeJointVector(posture, postureVec);
 
   vector<bool> collisionVec;
   map<string,bool> collisionInfo;

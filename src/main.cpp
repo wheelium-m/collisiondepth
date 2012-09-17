@@ -46,12 +46,12 @@ void go(Renderer& renderer) {
   //                                      btVector3(2.283, -0.256, 0.0));
 
   // Kitchen video goal body pose.
-  // btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -0.033),
-  //                                      btVector3(0.43, 0.6, 0.0));
+  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -0.033),
+                                       btVector3(0.43, 0.6, 0.0));
 
   // Fountain video start body poes.
-  btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -3.129),
-                                       btVector3(3.479, 6.684, 0.0));
+  // btTransform robotFrame = btTransform(btQuaternion(btVector3(0,0,1), -3.129),
+  //                                      btVector3(3.479, 6.684, 0.0));
 
 
   //robotFrame = btTransform::getIdentity();
